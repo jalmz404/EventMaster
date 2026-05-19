@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EventMaster | Confirmar Asistencia</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body style="background-color: #fdf2f8; min-height: 100vh;">
+    <div class="container py-5">
+        
+        <div id="vista-invitacion" class="guest-form-container text-center mb-4 border-top-0 shadow-lg" style="background: url('https://www.transparenttextures.com/patterns/cream-paper.png'); border: 8px solid #fce7f3;">
+            <div class="p-4 border border-1" style="border-color: #fbcfe8 !important;">
+                <i class="bi bi-balloon-heart text-primary-custom" style="font-size: 3rem;"></i>
+                <h1 class="display-3 text-primary-custom mb-3 mt-2" style="font-family: 'Times New Roman', serif; letter-spacing: -2px;">Ana & Roberto</h1>
+                <h4 class="text-dark mb-4 fw-light fst-italic">Tienen el honor de invitarte a su boda</h4>
+                
+                <div class="mx-auto my-4 bg-primary-custom" style="height: 1px; width: 100px;"></div>
+
+                <div class="mb-4 text-center">
+                    <p class="mb-2 fs-5"><i class="bi bi-calendar-event text-primary-custom me-2"></i> <strong>Sábado, 15 de Noviembre</strong></p>
+                    <p class="mb-2 fs-5"><i class="bi bi-clock text-primary-custom me-2"></i> 20:00 Hrs</p>
+                    <p class="mb-2 fs-5"><i class="bi bi-geo-alt text-primary-custom me-2"></i> <strong>Quinta Los Pinos</strong></p>
+                    <p class="mb-0 text-muted mt-3"><i class="bi bi-person-badge me-1"></i> Vestimenta: Formal</p>
+                </div>
+                
+                <button id="btn-abrir-registro" class="btn btn-primary-custom btn-lg px-5 mt-3 fw-bold rounded-pill shadow-sm">Confirmar Asistencia</button>
+            </div>
+            <a href="login.html" class="btn btn-link text-muted text-decoration-none mt-4"><i class="bi bi-arrow-left"></i> Volver al panel Admin</a>
+        </div>
+
+        <div id="vista-formulario" class="guest-form-container hidden shadow-lg">
+            <div class="text-center mb-4">
+                <h3 class="fw-bold text-dark">Registro de Asistencia</h3>
+                <p class="text-muted">Por favor, llena tus datos y los de tu familia.</p>
+            </div>
+            
+            <form id="registro-invitados">
+                <div class="card bg-light border-0 p-4 mb-4">
+                    <h6 class="fw-bold mb-3 text-primary-custom">Tu Información (Invitado Principal)</h6>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium small">Nombre Completo</label>
+                        <input type="text" class="form-control" required placeholder="Ej. Carlos Rodríguez">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label fw-medium small">Selecciona tu Menú</label>
+                        <select class="form-select guest-menu-select" required>
+                            <option value="">Elige una opción...</option>
+                            <option value="Res">Res</option>
+                            <option value="Pollo">Pollo</option>
+                            <option value="Opción Vegana">Opción Vegana</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="acompanantes-container"></div>
+                
+                <button type="button" id="btn-agregar-acompanante" class="btn btn-outline-primary w-100 mb-4 fw-medium border-dashed" style="border-style: dashed; border-width: 2px;">
+                    <i class="bi bi-plus-circle me-2"></i> Añadir un acompañante
+                </button>
+
+                <hr class="text-muted mb-4">
+                <div class="d-grid gap-3">
+                    <button type="submit" class="btn btn-primary-custom btn-lg fw-bold shadow-sm">Enviar Confirmación</button>
+                    <button type="button" id="btn-cancelar-registro" class="btn btn-light fw-medium">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="js/script.js"></script>
+</body>
+</html>

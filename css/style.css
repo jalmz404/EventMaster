@@ -1,0 +1,132 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --primary: #ec4899; 
+    --primary-hover: #db2777;
+    --bg-light: #fff1f2; 
+    --bg-card: #ffffff;
+    --border-color: #ffe4e6;
+    --text-main: #334155;
+    --text-muted: #64748b;
+}
+
+body { 
+    background-color: var(--bg-light); 
+    font-family: 'Inter', sans-serif;
+    color: var(--text-main);
+}
+
+/* ESTA LÍNEA ES VITAL: Esconde las pantallas inactivas */
+.hidden { display: none !important; }
+
+.text-primary-custom { color: var(--primary) !important; }
+.bg-primary-custom { background-color: var(--primary) !important; }
+
+.btn-primary-custom { 
+    background-color: var(--primary); 
+    border: none; 
+    color: white;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+.btn-primary-custom:hover { 
+    background-color: var(--primary-hover); 
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(236, 72, 153, 0.2);
+}
+
+.btn-volver-custom {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 50px;
+    padding: 6px 16px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+.btn-volver-custom:hover {
+    background-color: white;
+    color: var(--primary);
+}
+
+.nav-pills .nav-link {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    font-weight: 500;
+    border-radius: 8px;
+    padding: 10px 15px;
+    transition: all 0.2s;
+}
+.nav-pills .nav-link.active {
+    background-color: #fce7f3; 
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.event-card, .menu-card-item .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+.event-card:hover {
+    box-shadow: 0 10px 20px rgba(236, 72, 153, 0.08);
+    border-color: var(--primary);
+}
+.event-card.inactivo {
+    background-color: #f8fafc;
+    border-color: #e2e8f0;
+    opacity: 0.8;
+}
+
+.guest-form-container {
+    max-width: 650px;
+    margin: 0 auto;
+    background: white;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    border-top: 6px solid var(--primary);
+}
+
+/* --- ESTILOS DE MESAS (DRAG & DROP) --- */
+.workspace-mesas {
+    background-color: #f8fafc;
+    background-image: radial-gradient(#cbd5e1 2px, transparent 2px);
+    background-size: 30px 30px;
+    width: 3000px; 
+    height: 3000px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform-origin: 0 0;
+    transition: transform 0.2s ease; 
+}
+.mesa-card {
+    width: 220px;
+    position: absolute; 
+    cursor: grab;
+    border-radius: 12px;
+    overflow: hidden;
+    background: white;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border: 2px solid transparent;
+}
+.mesa-card:active { cursor: grabbing; box-shadow: 0 12px 25px rgba(236, 72, 153, 0.3); z-index: 100 !important; }
+.mesa-card.selected { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.2); }
+.mesa-header { background: linear-gradient(90deg, var(--primary) 0%, #f472b6 100%); color: white; padding: 12px; text-align: center; font-weight: 700; }
+.mesa-body { min-height: 100px; padding: 10px; font-size: 0.85rem; color: var(--text-main); }
+.mesa-footer { background-color: #fff1f2; padding: 8px; text-align: center; font-size: 0.8rem; font-weight: 600; color: var(--primary); border-top: 1px solid var(--border-color); }
+.guest-item { padding: 8px 12px; margin-bottom: 6px; border-radius: 6px; cursor: pointer; background-color: white; border: 1px solid var(--border-color); }
+.guest-item:hover { background-color: #fce7f3; }
+.guest-item.selected { background-color: var(--primary); color: white; border-color: var(--primary); }
+
+/* --- ESTILOS PÁGINA DE INICIO --- */
+.hero-bg { background: linear-gradient(180deg, var(--bg-light) 0%, var(--bg-card) 100%); }
+.badge-hero { background-color: #fce7f3; color: var(--primary); border-radius: 20px; }
+.icon-box { width: 64px; height: 64px; background-color: #fce7f3; color: var(--primary); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin-bottom: 1.5rem; }
+.hover-card { transition: all 0.3s ease; }
+.hover-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(236, 72, 153, 0.1) !important; border-color: #fbcfe8 !important; }

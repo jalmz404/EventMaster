@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EventMaster | Gestión</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-white d-flex flex-column vh-100">
+    
+    <nav class="navbar px-4 py-3 shadow-sm z-1" style="background: linear-gradient(90deg, #ec4899 0%, #f472b6 100%);">
+        <div class="d-flex align-items-center">
+            <a href="dashboard.html" class="btn btn-volver-custom me-3 text-decoration-none">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+            <h5 class="mb-0 fw-bold text-white" id="display-event-name">Nombre del Evento</h5>
+        </div>
+    </nav>
+    
+    <div class="d-flex flex-grow-1 overflow-hidden">
+        <div class="col-2 border-end p-3" style="background-color: #fffafb;">
+            <ul class="nav nav-pills flex-column gap-1" id="eventTabs" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active w-100 text-start text-nowrap" data-bs-toggle="pill" data-bs-target="#tab-propiedades"><i class="bi bi-sliders me-2"></i> Propiedades</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link w-100 text-start text-nowrap" data-bs-toggle="pill" data-bs-target="#tab-general"><i class="bi bi-people me-2"></i> Lista de Invitados</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link w-100 text-start text-nowrap" data-bs-toggle="pill" data-bs-target="#tab-reportes"><i class="bi bi-graph-up-arrow me-2"></i> Reportes y Analítica</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link w-100 text-start text-nowrap" data-bs-toggle="pill" data-bs-target="#tab-invitacion"><i class="bi bi-envelope-paper me-2"></i> Diseño Invitación</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link w-100 text-start text-nowrap" data-bs-toggle="pill" data-bs-target="#tab-mesas"><i class="bi bi-grid-3x3-gap me-2"></i> Acomodo de Mesas</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link w-100 text-start text-nowrap" data-bs-toggle="pill" data-bs-target="#tab-compartir"><i class="bi bi-share me-2"></i> Compartir QR/Link</button>
+                </li>
+            </ul>
+        </div>
+
+        <div class="col-10 p-4 p-md-5 tab-content overflow-auto h-100" style="background-color: var(--bg-light);">
+            
+            <div class="tab-pane fade show active" id="tab-propiedades">
+                <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius: 12px;">
+                    <h5 class="fw-bold mb-4 border-bottom pb-2">Información Principal</h5>
+                    <div class="row g-4">
+                        <div class="col-md-8">
+                            <label class="form-label small fw-semibold text-secondary">Nombre del Evento</label>
+                            <input type="text" class="form-control" id="edit-nombre">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold text-secondary">Tipo de Evento</label>
+                            <div class="input-group">
+                                <select class="form-select" id="edit-tipo">
+                                    <option value="Boda">Boda</option>
+                                    <option value="XV Años">XV Años</option>
+                                </select>
+                                <button class="btn btn-outline-primary" type="button" onclick="abrirModalOpcion('#edit-tipo', 'Tipo de Evento')"><i class="bi bi-plus"></i></button>
+                                <button class="btn btn-outline-danger" type="button" onclick="eliminarOpcionSelect('#edit-tipo')"><i class="bi bi-trash"></i></button>
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label small fw-semibold text-secondary">Lugar / Salón</label>
+                            <input type="text" class="form-control" id="edit-lugar">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold text-secondary">Fecha</label>
+                            <input type="date" class="form-control" id="edit-fecha">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-semibold text-secondary">Hora</label>
+                            <input type="time" class="form-control" id="edit-hora">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-semibold text-secondary">Vestimenta</label>
+                            <div class="input-group">
+                                <select class="form-select" id="edit-vestimenta">
+                                    <option value="Formal">Formal</option>
+                                    <option value="Casual">Casual</option>
+                                </select>
+                                <button class="btn btn-outline-primary" type="button" onclick="abrirModalOpcion('#edit-vestimenta', 'Vestimenta')"><i class="bi bi-plus"></i></button>
+                                <button class="btn btn-outline-danger" type="button" onclick="eliminarOpcionSelect('#edit-vestimenta')"><i class="bi bi-trash"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm p-4" style="border-radius: 12px;">
+                    <h5 class="fw-bold mb-3">Opciones de Platillos</h5>
+                    <div class="row mb-4">
+                        <div class="col-md-6 d-flex gap-2">
+                            <input type="text" id="input-new-menu" class="form-control" placeholder="Ej. Medallón de Res...">
+                            <button class="btn btn-primary-custom text-nowrap" id="btn-add-menu-card">Agregar</button>
+                        </div>
+                    </div>
+                    <div class="row g-3" id="menu-cards-container">
+                        <div class="col-md-4 menu-card-item">
+                            <div class="card border-0 shadow-sm h-100" style="background-color: #fdf2f8;">
+                                <div class="card-body d-flex justify-content-between align-items-center p-3">
+                                    <div><i class="bi bi-cup-hot text-primary-custom me-2"></i><span class="fw-medium text-dark menu-name-span">Res</span></div>
+                                    <button class="btn btn-sm btn-outline-danger border-0 remove-menu-card"><i class="bi bi-trash3"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 menu-card-item">
+                            <div class="card border-0 shadow-sm h-100" style="background-color: #fdf2f8;">
+                                <div class="card-body d-flex justify-content-between align-items-center p-3">
+                                    <div><i class="bi bi-cup-hot text-primary-custom me-2"></i><span class="fw-medium text-dark menu-name-span">Pollo</span></div>
+                                    <button class="btn btn-sm btn-outline-danger border-0 remove-menu-card"><i class="bi bi-trash3"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 menu-card-item">
+                            <div class="card border-0 shadow-sm h-100" style="background-color: #fdf2f8;">
+                                <div class="card-body d-flex justify-content-between align-items-center p-3">
+                                    <div><i class="bi bi-cup-hot text-primary-custom me-2"></i><span class="fw-medium text-dark menu-name-span">Opción Vegana</span></div>
+                                    <button class="btn btn-sm btn-outline-danger border-0 remove-menu-card"><i class="bi bi-trash3"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4 d-flex justify-content-between">
+                    <button class="btn btn-outline-danger fw-semibold px-4" id="btn-eliminar-evento"><i class="bi bi-trash3 me-2"></i> Eliminar Evento</button>
+                    <button class="btn btn-primary-custom fw-bold px-5 py-2">Guardar Cambios</button>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="tab-general">
+                <div class="card border-0 shadow-sm p-4" style="border-radius: 12px;">
+                    <div class="d-flex justify-content-between mb-4 align-items-center">
+                        <h5 class="fw-bold m-0">Lista de Invitados</h5>
+                        <div>
+                            <button class="btn btn-primary-custom me-2" onclick="abrirModalInvitado('nuevo')"><i class="bi bi-person-plus me-2"></i>Agregar Manual</button>
+                            <button class="btn btn-success"><i class="bi bi-file-earmark-spreadsheet me-2"></i>Exportar Excel</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table align-middle table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>NOMBRE</th>
+                                    <th>TIPO</th>
+                                    <th>MENÚ SELECCIONADO</th>
+                                    <th class="text-center">MESA</th>
+                                    <th class="text-end">ACCIONES</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-invitados-body">
+                                <tr class="fila-invitado" data-id="g1">
+                                    <td class="td-nombre">Juan Pérez</td>
+                                    <td><span class="badge bg-light text-dark border">Principal</span></td>
+                                    <td class="td-menu">Res</td>
+                                    <td class="text-center fw-bold text-muted td-mesa">S/A</td>
+                                    <td class="text-end">
+                                        <button class="btn btn-sm btn-outline-secondary me-1" onclick="abrirModalInvitado('editar', this)"><i class="bi bi-pencil"></i></button>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="eliminarFila(this)"><i class="bi bi-trash"></i></button>
+                                    </td>
+                                </tr>
+                                <tr class="fila-invitado" data-id="g2">
+                                    <td class="td-nombre">Ana Gómez</td>
+                                    <td><span class="badge bg-light text-dark border">Acompañante</span></td>
+                                    <td class="td-menu">Pollo</td>
+                                    <td class="text-center fw-bold text-muted td-mesa">S/A</td>
+                                    <td class="text-end">
+                                        <button class="btn btn-sm btn-outline-secondary me-1" onclick="abrirModalInvitado('editar', this)"><i class="bi bi-pencil"></i></button>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="eliminarFila(this)"><i class="bi bi-trash"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="tab-reportes">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold m-0">Resumen Logístico</h5>
+                    <button class="btn btn-outline-primary btn-sm"><i class="bi bi-file-pdf me-2"></i>Descargar PDF</button>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm p-4 text-center h-100" style="border-radius: 12px;">
+                            <span class="text-secondary small fw-bold">TOTAL SERVICIOS</span>
+                            <h1 class="fw-bold text-primary-custom mt-2 mb-0" id="rep-total-platos">0</h1>
+                            <p class="small text-muted mt-2 mb-0">Platillos a solicitar</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm p-4 text-center h-100" style="border-radius: 12px;">
+                            <span class="text-secondary small fw-bold">OCUPACIÓN DE MESAS</span>
+                            <h1 class="fw-bold text-dark mt-2 mb-0" id="rep-mesas-info">0 / 0</h1>
+                            <p class="small text-muted mt-2 mb-0">Sillas Ocupadas / Capacidad</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm p-4 text-center h-100" style="border-radius: 12px;">
+                            <span class="text-secondary small fw-bold">MESAS ARMADAS</span>
+                            <h1 class="fw-bold text-success mt-2 mb-0" id="rep-mesas-creadas">0</h1>
+                            <p class="small text-muted mt-2 mb-0">Total en el plano</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-md-8">
+                        <div class="card border-0 shadow-sm p-4 h-100" style="border-radius: 12px;">
+                            <h6 class="fw-bold mb-4">Distribución de Menús</h6>
+                            <div style="height: 300px; display: flex; justify-content: center;">
+                                <canvas id="menuChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius: 12px;">
+                            <h6 class="fw-bold mb-3">Eficiencia de Acomodo</h6>
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span class="text-secondary">Invitados en mesa</span>
+                                <span class="fw-bold text-primary-custom" id="rep-porcentaje-acomodo">0%</span>
+                            </div>
+                            <div class="progress" style="height: 10px; border-radius: 10px;">
+                                <div id="rep-progress-bar" class="progress-bar bg-primary-custom" role="progressbar" style="width: 0%; transition: width 0.5s;"></div>
+                            </div>
+                            <p class="small text-muted mt-2 mb-0" id="rep-sin-asignar-texto">0 invitados flotantes</p>
+                        </div>
+
+                        <div class="card border-0 shadow-sm p-4" style="border-radius: 12px;">
+                            <h6 class="fw-bold mb-3">Desglose Exacto</h6>
+                            <ul class="list-group list-group-flush" id="rep-lista-desglose">
+                                <li class="list-group-item d-flex justify-content-between align-items-center px-0 border-0 text-muted small">
+                                    Agrega invitados para ver datos
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="tab-invitacion">
+                <div class="card border-0 shadow-sm p-4" style="border-radius: 12px;">
+                    <h5 class="fw-bold mb-4">Textos de la Invitación</h5>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Título Principal</label>
+                        <input type="text" class="form-control" placeholder="Ej. ¡Nos casamos!">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Mensaje de Bienvenida</label>
+                        <textarea class="form-control" rows="4" placeholder="Escribe unas palabras para tus invitados..."></textarea>
+                    </div>
+                    <div class="text-end mt-3">
+                        <button class="btn btn-primary-custom px-4">Actualizar Diseño</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade h-100" id="tab-mesas">
+                <div class="row h-100 g-0 shadow-sm" style="border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); background: white;">
+                    
+                    <div class="col-md-9 position-relative bg-light" style="overflow: auto;">
+                        <div class="position-absolute top-0 end-0 m-3 z-3 shadow-sm rounded bg-white border">
+                            <div class="btn-group">
+                                <button class="btn btn-light btn-sm px-3" id="btn-zoom-out" title="Alejar"><i class="bi bi-zoom-out"></i></button>
+                                <button class="btn btn-light btn-sm px-3 border-start border-end fw-bold" id="btn-zoom-reset" title="Restaurar">100%</button>
+                                <button class="btn btn-light btn-sm px-3" id="btn-zoom-in" title="Acercar"><i class="bi bi-zoom-in"></i></button>
+                            </div>
+                        </div>
+                        
+                        <div class="workspace-mesas" id="workspace-mesas">
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 bg-white border-start p-3 d-flex flex-column z-2 overflow-auto" style="max-height: 100%;">
+                        <h6 class="fw-bold mb-3 text-dark"><i class="bi bi-card-list me-2"></i>Lista de Invitados</h6>
+                        
+                        <div class="border rounded bg-light flex-grow-1 mb-3 p-2 overflow-auto" id="lista-invitados-sin-asignar" style="min-height: 200px;">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary">Capacidad de la mesa:</label>
+                            <input type="number" id="input-capacidad-mesa" class="form-control" value="8" min="2" max="20">
+                        </div>
+                        
+                        <div class="d-grid gap-2 mb-4">
+                            <button class="btn btn-dark fw-medium py-2" id="btn-crear-mesa"><i class="bi bi-plus-lg me-1"></i> Agregar Mesa</button>
+                            <button class="btn btn-success fw-medium py-2" id="btn-asignar-invitado"><i class="bi bi-arrow-right-circle me-1"></i> Asignar a mesa</button>
+                            <button class="btn btn-warning fw-medium py-2 text-dark border-0" id="btn-quitar-invitado" style="background-color: #d97706; color: white !important;"><i class="bi bi-arrow-left-circle me-1"></i> Quitar asignación</button>
+                            <hr class="my-2">
+                            <button class="btn btn-danger fw-medium py-2" id="btn-eliminar-mesa-seleccionada"><i class="bi bi-trash3 me-1"></i> Eliminar mesa</button>
+                            <button class="btn btn-outline-primary fw-medium py-2 mt-2" id="btn-exportar-mapa"><i class="bi bi-download me-1"></i> Exportar Mapa</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="tab-compartir">
+                <div class="card border-0 shadow-sm p-5 text-center mx-auto" style="border-radius: 12px; max-width: 600px;">
+                    <i class="bi bi-qr-code text-dark mb-3" style="font-size: 5rem;"></i>
+                    <h4 class="fw-bold">Enlace de tu Evento</h4>
+                    <p class="text-muted mb-4">Copia y comparte este link por WhatsApp para que confirmen su asistencia.</p>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control text-center bg-light" value="https://eventmaster.com/inv/boda" readonly>
+                        <button class="btn btn-primary-custom px-4"><i class="bi bi-copy me-2"></i>Copiar</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalNuevaOpcion" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-body p-4 text-center">
+                    <h6 class="fw-bold mb-3" id="tituloModalOpcion">Añadir Opción</h6>
+                    <input type="text" id="inputNuevaOpcion" class="form-control mb-3" placeholder="Escribe aquí...">
+                    <button class="btn btn-primary-custom w-100" id="btn-guardar-opcion">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalInvitado" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-0">
+                    <h5 class="fw-bold text-dark" id="tituloModalInvitado">Gestión de Invitado</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Nombre Completo</label>
+                        <input type="text" id="inv-nombre" class="form-control">
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Menú Asignado</label>
+                            <select id="inv-menu" class="form-select"></select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Número de Mesa</label>
+                            <select id="inv-mesa" class="form-select"></select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button class="btn btn-primary-custom w-100 fw-semibold" id="btn-guardar-invitado">Guardar Invitado</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/script.js"></script>
+</body>
+</html>

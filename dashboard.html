@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EventMaster | Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg border-bottom bg-white px-4 py-3 shadow-sm">
+        <a class="navbar-brand fw-bold text-primary-custom d-flex align-items-center" href="dashboard.html">
+            <i class="bi bi-calendar2-star me-2"></i> EventMaster
+        </a>
+        <div class="d-flex ms-auto gap-3">
+            <button class="btn btn-primary-custom fw-medium px-4" id="btn-crear-evento">
+                <i class="bi bi-plus-lg me-1"></i> Nuevo Evento
+            </button>
+            <a href="login.html" class="btn btn-light border text-secondary rounded-pill text-decoration-none"><i class="bi bi-box-arrow-right"></i> Salir</a>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <h5 class="mb-4 fw-bold text-dark">Tus Eventos</h5>
+        <div class="row g-4" id="contenedor-eventos">
+            <div class="col-md-4">
+                <div class="event-card p-4" onclick="window.location.href='gestion.html'">
+                    <span class="badge bg-success mb-2">Activo</span>
+                    <div class="d-flex align-items-center mb-3 mt-1">
+                        <div class="bg-primary-custom rounded-circle p-2 me-3 text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <i class="bi bi-calendar-event"></i>
+                        </div>
+                        <h6 class="mb-0 fw-bold text-dark">Boda de Prueba</h6>
+                    </div>
+                    <div class="small text-secondary">
+                        <p class="mb-1"><i class="bi bi-geo-alt me-1"></i> Salón Ilusiones</p>
+                        <p class="mb-0"><i class="bi bi-calendar me-1"></i> 2026-11-15</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalCrearEvento" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="fw-bold text-dark">Nuevo Evento</h5>
+                    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Nombre</label>
+                        <input type="text" id="nombre-ev" class="form-control shadow-none" required>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Fecha</label>
+                            <input type="date" id="fecha-ev" class="form-control shadow-none" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Lugar</label>
+                            <input type="text" id="lugar-ev" class="form-control shadow-none" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button class="btn btn-primary-custom w-100 py-2 fw-semibold" id="btn-guardar-evento">Crear Evento</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/script.js"></script>
+</body>
+</html>
