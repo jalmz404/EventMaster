@@ -29,34 +29,61 @@ $(document).ready(function() {
             const today = new Date();
             today.setHours(0,0,0,0);
             
-            let statusBadge = (eventDate < today) ? `<span class="badge bg-secondary mb-2 border">Inactivo (Finalizado)</span>` : `<span class="badge bg-success mb-2">Activo</span>`;
+            let statusBadge = (eventDate < today) ? `<span class=\"badge bg-secondary mb-2 border\">Inactivo (Finalizado)</span>` : `<span class=\"badge bg-success mb-2\">Activo</span>`;
             let extraClass = (eventDate < today) ? 'inactivo' : ''; 
 
-            const cardId = 'evento-' + Date.now();
-            // Al hacer clic, ejecuta la función global que redirige de página
-            const card = `
-                <div class="col-md-4" id="${cardId}">
-                    <div class="event-card p-4 ${extraClass}" onclick="abrirDetallesEvento('${nombre}', '${fecha}', '${lugar}', '${cardId}')">
-                        ${statusBadge}
-                        <div class="d-flex align-items-center mb-3 mt-1">
-                            <div class="bg-primary-custom rounded-circle p-2 me-3 text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                <i class="bi bi-calendar-event"></i>
+            // Implementación de logica BackEnd            
+            $.ajax({
+                url: 'php/crear_evento.php',
+                method: 'POST',
+                data: {
+                    nombre: nombre,
+                    fecha: fecha,
+                    lugar: lugar
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        alert(response.message); // "Evento creado exitosamente"
+
+                        // Ejecucion del codigo previamente implementado
+                        let cardHtml = `
+                            <div class="col-md-4 mb-4 card-evento ${extraClass}">
+                                <div class="card shadow-sm border-0 h-100 p-4 position-relative hover-card">
+                                    ${statusBadge}
+                                    <h5 class="fw-bold mb-1 text-dark text-capitalize">${nombre}</h5>
+                                    <p class="text-muted small mb-3"><i class="bi bi-geo-alt-fill me-1 text-danger"></i> ${lugar}</p>
+                                    <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top">
+                                        <div class="d-flex align-items-center text-secondary small">
+                                            <i class="bi bi-calendar3 me-2 text-primary-custom"></i>
+                                            <span>${fecha}</span>
+                                        </div>
+                                        <a href="gestion.html" class="btn btn-sm btn-outline-primary-custom px-3 fw-medium rounded-pill btn-gestionar">Gestionar</a>
+                                    </div>
+                                </div>
                             </div>
-                            <h6 class="mb-0 fw-bold text-dark">${nombre}</h6>
-                        </div>
-                        <div class="small text-secondary">
-                            <p class="mb-1"><i class="bi bi-geo-alt me-1"></i> ${lugar}</p>
-                            <p class="mb-0"><i class="bi bi-calendar me-1"></i> ${fecha}</p>
-                        </div>
-                    </div>
-                </div>
-            `;
-            $('#contenedor-eventos').append(card);
-            bootstrap.Modal.getInstance('#modalCrearEvento').hide();
-            $('#nombre-ev, #fecha-ev, #lugar-ev').val('');
+                        `;
+                        
+                        $('#contenedor-eventos').append(cardHtml);
+
+                        // Código de limpieza que ellos ya tenían
+                        new bootstrap.Modal('#modalCrearEvento').hide();
+                        $('#nombre-ev').val('');
+                        $('#fecha-ev').val('');
+                        $('#lugar-ev').val('');
+                        
+                    } else {
+                        alert("Error al guardar en BD: " + response.message);
+                    }
+                },
+                error: function() {
+                    alert("No se pudo conectar con el servidor PHP.");
+                }
+            });
+            
         });
     }
-
+    
     // ==========================================
     // 2. LÓGICA PARA: gestion.html
     // ==========================================
