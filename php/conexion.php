@@ -1,5 +1,5 @@
-// Este archivo se encargara de establecer la conexión a la base de datos usando PDO.
 <?php
+// Este archivo se encargara de establecer la conexión a la base de datos usando PDO.
 $host = "localhost";
 $db_name = "eventmaster_db";
 $username = "root";

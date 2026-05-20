@@ -7,6 +7,41 @@ let contadorMesas = 0;
 let zoomLevel = 1.0;
 let menuChartInstance = null;
 
+    // ==========================================
+    // LOGIN
+    // ==========================================
+
+$('#form-login').on('submit', function(e) {
+    e.preventDefault(); 
+
+    // Limpiamos cualquier error viejo al volver a intentar
+    $('#mensaje-error').text('');
+
+    let correo = $('#correo-login').val();
+    let password = $('#password-login').val();
+
+    $.ajax({
+        url: 'php/login.php',
+        method: 'POST',
+        data: {
+            correo: correo,
+            password: password
+        },
+        dataType: 'json',
+        success: function(response) {
+            if (response.status === 'success') {
+                window.location.href = 'dashboard.html';
+            } else {
+                // En lugar de alert(), inyectamos el texto en el HTML
+                $('#mensaje-error').text(response.message);
+            }
+        },
+        error: function() {
+            $('#mensaje-error').text("Error al comunicarse con el servidor.");
+        }
+    });
+});
+
 $(document).ready(function() {
     
     // ==========================================
@@ -44,33 +79,21 @@ $(document).ready(function() {
                 dataType: 'json',
                 success: function(response) {
                     if (response.status === 'success') {
-                        alert(response.message); // "Evento creado exitosamente"
+                        alert(response.message); // 
 
-                        // Ejecucion del codigo previamente implementado
-                        let cardHtml = `
-                            <div class="col-md-4 mb-4 card-evento ${extraClass}">
-                                <div class="card shadow-sm border-0 h-100 p-4 position-relative hover-card">
-                                    ${statusBadge}
-                                    <h5 class="fw-bold mb-1 text-dark text-capitalize">${nombre}</h5>
-                                    <p class="text-muted small mb-3"><i class="bi bi-geo-alt-fill me-1 text-danger"></i> ${lugar}</p>
-                                    <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top">
-                                        <div class="d-flex align-items-center text-secondary small">
-                                            <i class="bi bi-calendar3 me-2 text-primary-custom"></i>
-                                            <span>${fecha}</span>
-                                        </div>
-                                        <a href="gestion.html" class="btn btn-sm btn-outline-primary-custom px-3 fw-medium rounded-pill btn-gestionar">Gestionar</a>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                        
-                        $('#contenedor-eventos').append(cardHtml);
+                        //Cerramos el modal de Bootstrap
+                        const modalElement = document.getElementById('modalCrearEvento');
+                        const modalInstance = bootstrap.Modal.getInstance(modalElement);
+                        if (modalInstance) {
+                            modalInstance.hide();
+                        }
 
-                        // Código de limpieza que ellos ya tenían
-                        new bootstrap.Modal('#modalCrearEvento').hide();
+                        //Limpiamos las cajas
                         $('#nombre-ev').val('');
                         $('#fecha-ev').val('');
                         $('#lugar-ev').val('');
+                        
+                        cargarEventos();
                         
                     } else {
                         alert("Error al guardar en BD: " + response.message);
@@ -487,4 +510,54 @@ function actualizarAnalitica() {
             }
         });
     }
+
+
 }
+function cargarEventos() {
+    $.ajax({
+        url: 'php/obtener_eventos.php',
+        method: 'GET',
+        dataType: 'json',
+        success: function(response) {
+            if (response.status === 'success') {
+                $('#contenedor-eventos').empty();
+                
+                response.data.forEach(function(evento) {
+                    
+                    //Lógica para saber si está activo o inactivo
+                    let today = new Date().toISOString().split('T')[0];
+                    let statusBadge = (evento.fecha < today) ? 
+                        '<span class="badge bg-secondary mb-2">Inactivo (Finalizado)</span>' : 
+                        '<span class="badge bg-success mb-2">Activo</span>';
+                    let extraClass = (evento.fecha < today) ? 'inactivo' : '';
+
+                    let cardHtml = `
+                        <div class="col-md-4 mb-4">
+                            <div class="card event-card shadow-sm border-0 h-100 p-4 ${extraClass}" style="cursor: pointer;" onclick="window.location.href='gestion.html?id=${evento.id}'">
+                                <div class="text-start">
+                                    ${statusBadge}
+                                </div>
+                                <div class="d-flex align-items-center mb-3 mt-1">
+                                    <div class="bg-primary-custom rounded-circle p-2 me-3 text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i class="bi bi-calendar-event"></i>
+                                    </div>
+                                    <h6 class="mb-0 fw-bold text-dark text-capitalize">${evento.nombre}</h6>
+                                </div>
+                                <div class="small text-secondary mt-auto">
+                                    <p class="mb-1"><i class="bi bi-geo-alt me-1"></i> ${evento.lugar}</p>
+                                    <p class="mb-0"><i class="bi bi-calendar me-1"></i> ${evento.fecha}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    $('#contenedor-eventos').append(cardHtml);
+                });
+            }
+        }
+    });
+}
+// Ejecutar la función en cuanto se abra el dashboard
+$(document).ready(function() {
+    cargarEventos();
+});
