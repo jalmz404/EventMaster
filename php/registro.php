@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     try {
-        // ── Verificar si el correo ya existe ──────────────────────────────
+
         $check = $conexion->prepare("SELECT id_organizador FROM organizadores WHERE correo = :correo");
         $check->bindParam(":correo", $correo);
         $check->execute();
