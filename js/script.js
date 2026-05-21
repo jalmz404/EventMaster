@@ -166,10 +166,22 @@ function cargarInvitados() {
                     const menuText = invitado.nombre_platillo ? invitado.nombre_platillo : '<span class="text-muted">Por definir</span>';
                     const numMesaText = invitado.id_mesa ? `Mesa ${invitado.id_mesa}` : 'S/A';
                     
+                    // si es acompañante, mostramos de quién es, si no es principal.
+                    let tipoBadge = '';
+                    if (invitado.id_invitado_principal) {
+                        const titular = invitado.nombre_titular ? invitado.nombre_titular : 'Desconocido';
+                        tipoBadge = `
+                            <span class="badge border text-secondary text-start" style="background-color: #f8f9fa;">
+                                Acompañante de:<br><small class="fw-bold text-dark">${titular}</small>
+                            </span>`;
+                    } else {
+                        tipoBadge = '<span class="badge text-white shadow-sm" style="background-color: #f472b6;">Principal</span>';
+                    }
+                    
                     const filaHtml = `
                         <tr class="fila-invitado" data-id="${invitado.id_invitado}">
-                            <td class="td-nombre">${invitado.nombre_completo}</td>
-                            <td><span class="badge bg-light text-dark border">Principal</span></td>
+                            <td class="td-nombre fw-medium">${invitado.nombre_completo}</td>
+                            <td>${tipoBadge}</td>
                             <td class="td-menu">${menuText}</td>
                             <td class="text-center fw-bold text-muted td-mesa">${numMesaText}</td>
                             <td class="text-end">
@@ -849,9 +861,40 @@ $(document).ready(function() {
         });
     });
 
-    // --- EVENTOS DE INVITADO (invitado.html) ---
+    // EVENTOS DE INVITADO (invitado.html)
     if ($('#vista-invitacion').length > 0) {
         
+        const id_evento = new URLSearchParams(window.location.search).get('id_evento');
+        let opcionesMenuHtml = '<option value="">Elige una opción...</option>';
+
+        //Cargar los datos 
+        if (id_evento) {
+            $.ajax({
+                url: 'php/obtener_info_invitacion.php',
+                method: 'GET',
+                data: { id_evento: id_evento },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        const ev = response.evento;
+                        
+                        $('#inv-display-titulo').text(ev.titulo_invitacion || '¡Estás Invitado!');
+                        $('#inv-display-mensaje').text(ev.mensaje_invitacion || 'Nos encantaría contar con tu presencia en este día tan especial.');
+                        $('#inv-display-evento').text(ev.nombre);
+                        $('#inv-display-fecha').text(ev.fecha);
+                        $('#inv-display-hora').text(ev.hora);
+                        $('#inv-display-lugar').text(ev.lugar);
+
+                        // Generar platillos
+                        response.menus.forEach(m => {
+                            opcionesMenuHtml += `<option value="${m.id_menu}">${m.nombre_platillo}</option>`;
+                        });
+                        $('.select-menus-dinamicos').html(opcionesMenuHtml);
+                    }
+                }
+            });
+        }
+
         $('#btn-abrir-registro').click(function() {
             $('#vista-invitacion').addClass('hidden');
             $('#vista-formulario').removeClass('hidden');
@@ -862,14 +905,10 @@ $(document).ready(function() {
             $('#vista-invitacion').removeClass('hidden');
         });
 
+        //agregar Acompañantes 
         let contadorAcompanantes = 0;
         $('#btn-agregar-acompanante').click(function() {
             contadorAcompanantes++;
-            let menuOptions = '<option value="">Elige una opción...</option>';
-            menuOptions += `<option value="Res">Res</option>`;
-            menuOptions += `<option value="Pollo">Pollo</option>`;
-            menuOptions += `<option value="Opción Vegana">Opción Vegana</option>`;
-
             let html = `
                 <div class="card p-3 mb-3 acompanante-item border border-warning bg-white shadow-sm" style="border-radius: 12px;">
                     <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
@@ -879,12 +918,12 @@ $(document).ready(function() {
                     <div class="row g-3">
                         <div class="col-md-7">
                             <label class="form-label small text-secondary">Nombre Completo</label>
-                            <input type="text" class="form-control" placeholder="Ej. Ana Rodríguez" required>
+                            <input type="text" class="form-control ac-nombre" placeholder="Ej. Ana Rodríguez" required>
                         </div>
                         <div class="col-md-5">
                             <label class="form-label small text-secondary">Su Menú</label>
-                            <select class="form-select" required>
-                                ${menuOptions}
+                            <select class="form-select ac-menu select-menus-dinamicos" required>
+                                ${opcionesMenuHtml}
                             </select>
                         </div>
                     </div>
@@ -897,14 +936,56 @@ $(document).ready(function() {
             $(this).closest('.acompanante-item').slideUp(200, function() { $(this).remove(); });
         });
         
+        //Formulario final
         $('#registro-invitados').submit(function(e) {
             e.preventDefault();
-            alert('¡Confirmación enviada! Tus datos y los de tus acompañantes han sido registrados.');
-            $('#vista-formulario').addClass('hidden');
-            $('#vista-invitacion').removeClass('hidden');
-            this.reset();
-            $('#acompanantes-container').empty();
-            contadorAcompanantes = 0;
+            
+            const btn = $('#btn-enviar-registro');
+            btn.prop('disabled', true).text('Enviando...');
+
+            // Armar objeto del principal
+            const principal = {
+                nombre: $('#nombre-principal').val().trim(),
+                id_menu: $('#menu-principal').val()
+            };
+
+            //Recopilar acompañantes
+            let acompanantes = [];
+            $('.acompanante-item').each(function() {
+                acompanantes.push({
+                    nombre: $(this).find('.ac-nombre').val().trim(),
+                    id_menu: $(this).find('.ac-menu').val()
+                });
+            });
+
+            //Enviar por ajax
+            $.ajax({
+                url: 'php/registrar_asistencia.php',
+                method: 'POST',
+                data: { 
+                    id_evento: id_evento,
+                    principal: principal,
+                    acompanantes: acompanantes
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        alert('¡Confirmación enviada! Tus datos han sido registrados exitosamente.');
+                        
+                        // Limpiar y regresar
+                        $('#registro-invitados')[0].reset();
+                        $('#acompanantes-container').empty();
+                        contadorAcompanantes = 0;
+                        $('#vista-formulario').addClass('hidden');
+                        $('#vista-invitacion').removeClass('hidden');
+                    } else {
+                        alert("Hubo un error: " + response.message);
+                    }
+                },
+                complete: function() {
+                    btn.prop('disabled', false).text('Enviar Confirmación');
+                }
+            });
         });
     }
     // ==========================================
