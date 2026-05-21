@@ -68,6 +68,8 @@ function cargarDetalleEvento(id) {
                 $('#edit-lugar').val(evento.lugar);
                 $('#edit-fecha').val(evento.fecha);
                 $('#edit-hora').val(evento.hora);
+                $('#inv-titulo-form').val(evento.titulo_invitacion || '');
+                $('#inv-mensaje-form').val(evento.mensaje_invitacion || '');
                 
                 let selectTipo = $('#edit-tipo');
                 selectTipo.empty();
@@ -348,7 +350,8 @@ $(document).ready(function() {
     const idEvento = parametrosURL.get('id_evento'); 
     if (idEvento) {
         cargarDetalleEvento(idEvento); 
-        cargarMesas(); // Esto arrancará las mesas y los invitados en el orden perfecto
+        cargarMesas();
+        generarQReLink();
     }
 
     // --- EVENTOS DEL LOGIN ---
@@ -812,6 +815,40 @@ $(document).ready(function() {
         });
     });
 
+    // GUARDAR DISEÑO DE INVITACIÓN
+    $('#btn-guardar-invitacion').off('click').on('click', function() {
+        const id_evento = new URLSearchParams(window.location.search).get('id_evento');
+        const titulo = $('#inv-titulo-form').val().trim();
+        const mensaje = $('#inv-mensaje-form').val().trim();
+
+        if (!titulo || !mensaje) {
+            return alert("Por favor completa ambos campos para la invitación.");
+        }
+
+        const btn = $(this);
+        const originalText = btn.text();
+        btn.text('Guardando...');
+        btn.prop('disabled', true);
+
+        $.ajax({
+            url: 'php/actualizar_invitacion.php',
+            method: 'POST',
+            data: { id_evento: id_evento, titulo: titulo, mensaje: mensaje },
+            dataType: 'json',
+            success: function(response) {
+                if(response.status === 'success') {
+                    alert('¡Diseño actualizado exitosamente!');
+                } else {
+                    alert("Error: " + response.message);
+                }
+            },
+            complete: function() {
+                btn.text(originalText);
+                btn.prop('disabled', false);
+            }
+        });
+    });
+
     // --- EVENTOS DE INVITADO (invitado.html) ---
     if ($('#vista-invitacion').length > 0) {
         
@@ -870,5 +907,57 @@ $(document).ready(function() {
             contadorAcompanantes = 0;
         });
     }
+    // ==========================================
+    // COMPARTIR QR / LINK
+    // ==========================================
+    
+    // Al cargar los datos del evento, generamos la URL y el QR
+    function generarQReLink() {
+        if ($('#qr-code-container').length === 0) return; // Si no estamos en esa pestaña, no hace nada
+
+        const id_evento = new URLSearchParams(window.location.search).get('id_evento');
+        if(!id_evento) return;
+
+        // Construimos la ruta inteligente. Cambia "gestion.html" por "invitado.html"
+        // Ejemplo: http://localhost/EventMaster/invitado.html?id_evento=11
+        const rutaActual = window.location.href.split('?')[0]; 
+        const urlFinal = rutaActual.replace('gestion.html', 'invitado.html') + '?id_evento=' + id_evento;
+
+        // Metemos el link en el input
+        $('#input-link-compartir').val(urlFinal);
+
+        // Limpiamos el contenedor por si había un QR viejo
+        $('#qr-code-container').empty();
+
+        // Dibujamos el QR nuevo (incluso le puse el color rosa de tu tema)
+        new QRCode(document.getElementById("qr-code-container"), {
+            text: urlFinal,
+            width: 180,
+            height: 180,
+            colorDark : "#ec4899", // Rosa EventMaster
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.H
+        });
+    }
+
+    $('#btn-copiar-link').off('click').on('click', function() {
+        const linkInput = document.getElementById('input-link-compartir');
+        const btn = $(this);
+        const originalText = btn.html();
+
+        // Seleccionar y copiar 
+        linkInput.select();
+        linkInput.setSelectionRange(0, 99999); 
+        navigator.clipboard.writeText(linkInput.value).then(function() {
+            // Efecto visual chido de confirmación
+            btn.html('<i class="bi bi-check2 me-1"></i>¡Copiado!');
+            btn.removeClass('btn-primary-custom').addClass('btn-success border-success');
+            
+            setTimeout(() => {
+                btn.html(originalText);
+                btn.removeClass('btn-success border-success').addClass('btn-primary-custom');
+            }, 2000);
+        });
+    });
 });
 

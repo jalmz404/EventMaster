@@ -231,14 +231,14 @@
                     <h5 class="fw-bold mb-4">Textos de la Invitación</h5>
                     <div class="mb-3">
                         <label class="form-label small fw-semibold">Título Principal</label>
-                        <input type="text" class="form-control" placeholder="Ej. ¡Nos casamos!">
+                        <input type="text" id="inv-titulo-form" class="form-control" placeholder="Ej. ¡Nos casamos!">
                     </div>
                     <div class="mb-3">
                         <label class="form-label small fw-semibold">Mensaje de Bienvenida</label>
-                        <textarea class="form-control" rows="4" placeholder="Escribe unas palabras para tus invitados..."></textarea>
+                        <textarea id="inv-mensaje-form" class="form-control" rows="4" placeholder="Escribe unas palabras para tus invitados..."></textarea>
                     </div>
                     <div class="text-end mt-3">
-                        <button class="btn btn-primary-custom px-4">Actualizar Diseño</button>
+                        <button id="btn-guardar-invitacion" class="btn btn-primary-custom px-4">Actualizar Diseño</button>
                     </div>
                 </div>
             </div>
@@ -283,15 +283,21 @@
             </div>
 
             <div class="tab-pane fade" id="tab-compartir">
-                <div class="card border-0 shadow-sm p-5 text-center mx-auto" style="border-radius: 12px; max-width: 600px;">
-                    <i class="bi bi-qr-code text-dark mb-3" style="font-size: 5rem;"></i>
-                    <h4 class="fw-bold">Enlace de tu Evento</h4>
-                    <p class="text-muted mb-4">Copia y comparte este link por WhatsApp para que confirmen su asistencia.</p>
-                    <div class="input-group mb-3">
-                        <input type="text" class="form-control text-center bg-light" value="https://eventmaster.com/inv/boda" readonly>
-                        <button class="btn btn-primary-custom px-4"><i class="bi bi-copy me-2"></i>Copiar</button>
+    
+            <div class="card border-0 shadow-sm p-5 text-center" style="border-radius: 12px; max-width: 600px; margin: 0 auto;">
+                
+                <div id="qr-code-container" class="d-flex justify-content-center mb-4">
                     </div>
+                
+                <h5 class="fw-bold mb-3">Enlace de tu Evento</h5>
+                <p class="text-secondary small mb-4">Copia y comparte este link por WhatsApp para que confirmen su asistencia.</p>
+                
+                <div class="input-group">
+                    <input type="text" id="input-link-compartir" class="form-control" readonly>
+                    <button class="btn btn-primary-custom" id="btn-copiar-link"><i class="bi bi-files me-2"></i>Copiar</button>
                 </div>
+                
+            </div>
             </div>
 
         </div>
@@ -345,6 +351,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="js/script.js"></script>
 </body>
 </html>
