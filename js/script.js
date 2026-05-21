@@ -3,7 +3,6 @@
 // ==========================================
 let selectActual = null;
 let filaEditando = null;
-let contadorMesas = 0;
 let zoomLevel = 1.0;
 let menuChartInstance = null;
 
@@ -11,7 +10,6 @@ let menuChartInstance = null;
 // FUNCIONES GLOBALES REUTILIZABLES (Backend)
 // ==========================================
 
-// Función para pedir los eventos al servidor y dibujarlos (Dashboard)
 function cargarEventos() {
     $.ajax({
         url: 'php/obtener_eventos.php',
@@ -52,7 +50,6 @@ function cargarEventos() {
     });
 }
 
-//Función para traer datos del evento
 function cargarDetalleEvento(id) {
     $.ajax({
         url: 'php/obtener_detalle_evento.php',
@@ -66,26 +63,22 @@ function cargarDetalleEvento(id) {
                 const vestimentas = response.data.tipos_vestimenta;
                 const menus = response.data.menus;
                 
-                //Datos de texto
                 $('#titulo-evento, #display-event-name').text(evento.nombre);
                 $('#edit-nombre').val(evento.nombre);
                 $('#edit-lugar').val(evento.lugar);
                 $('#edit-fecha').val(evento.fecha);
                 $('#edit-hora').val(evento.hora);
                 
-                //Llenar tipos de evento
                 let selectTipo = $('#edit-tipo');
                 selectTipo.empty();
                 tipos.forEach(t => { selectTipo.append(new Option(t.nombre_tipo, t.id_tipo_evento)); });
                 if(evento.id_tipo_evento) selectTipo.val(evento.id_tipo_evento);
 
-                //Llenar vestimentas
                 let selectVestimenta = $('#edit-vestimenta');
                 selectVestimenta.empty();
                 vestimentas.forEach(v => { selectVestimenta.append(new Option(v.nombre_vestimenta, v.id_tipo_vestimenta)); });
                 if(evento.id_tipo_vestimenta) selectVestimenta.val(evento.id_tipo_vestimenta);
 
-                //Dibujar los platillos
                 $('#menu-cards-container').empty(); 
                 menus.forEach(m => {
                     const cardHtml = `
@@ -100,6 +93,12 @@ function cargarDetalleEvento(id) {
                     $('#menu-cards-container').append(cardHtml);
                 });
 
+                let selectMenuModal = $('#inv-menu');
+                selectMenuModal.empty().append('<option value="">Sin menú (Por definir)</option>');
+                menus.forEach(m => {
+                    selectMenuModal.append(new Option(m.nombre_platillo, m.id_menu));
+                });
+
             } else {
                 alert("No se pudo cargar el evento: " + response.message);
                 window.location.href = 'dashboard.html'; 
@@ -108,61 +107,156 @@ function cargarDetalleEvento(id) {
     });
 }
 
+function cargarMesas() {
+    const id_evento = new URLSearchParams(window.location.search).get('id_evento');
+    
+    $.ajax({
+        url: 'php/obtener_mesas.php',
+        method: 'GET',
+        data: { id_evento: id_evento },
+        dataType: 'json',
+        success: function(response) {
+            if (response.status === 'success') {
+                $('#workspace-mesas').empty(); 
+                
+                response.data.forEach(mesa => {
+                    dibujarMesaInteractiva(mesa.id_mesa, mesa.numero_mesa, mesa.capacidad_maxima, 100, 100);
+                });
+                
+                if (typeof actualizarAnalitica === "function") {
+                    actualizarAnalitica();
+                }
+
+                // Cargamos invitados DESPUÉS de dibujar las mesas
+                cargarInvitados(); 
+
+            } else {
+                console.error("Error al cargar mesas:", response.message);
+            }
+        }
+    });
+}
+
+function cargarInvitados() {
+    const id_evento = new URLSearchParams(window.location.search).get('id_evento');
+    
+    $.ajax({
+        url: 'php/obtener_invitados.php',
+        method: 'GET',
+        data: { id_evento: id_evento },
+        dataType: 'json',
+        success: function(response) {
+            if (response.status === 'success') {
+                const tbody = $('#tabla-invitados-body');
+                const panelSinAsignar = $('#lista-invitados-sin-asignar');
+                
+                tbody.empty(); 
+                panelSinAsignar.empty();
+                $('.mesa-body').html('<p class="text-muted small text-center m-0 empty-text">(Sin invitados)</p>');
+                $('.count').text('0');
+
+                if(response.data.length === 0) {
+                    tbody.append('<tr><td colspan="5" class="text-center text-muted py-4">Aún no hay invitados registrados.</td></tr>');
+                    return;
+                }
+
+                response.data.forEach(invitado => {
+                    const menuText = invitado.nombre_platillo ? invitado.nombre_platillo : '<span class="text-muted">Por definir</span>';
+                    const numMesaText = invitado.id_mesa ? `Mesa ${invitado.id_mesa}` : 'S/A';
+                    
+                    const filaHtml = `
+                        <tr data-id="${invitado.id_invitado}">
+                            <td class="td-nombre">${invitado.nombre_completo}</td>
+                            <td><span class="badge bg-light text-dark border">Principal</span></td>
+                            <td>${menuText}</td>
+                            <td class="text-center fw-bold text-muted td-mesa">${numMesaText}</td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-outline-danger btn-eliminar-invitado" data-id="${invitado.id_invitado}"><i class="bi bi-trash3"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.append(filaHtml);
+
+                    const guestCard = `<div class="guest-item shadow-sm" data-id="${invitado.id_invitado}">${invitado.nombre_completo}</div>`;
+                    
+                    if (invitado.id_mesa) {
+                        const contenedorMesa = $(`#mesa-db-${invitado.id_mesa}`);
+                        if (contenedorMesa.length) {
+                            contenedorMesa.find('.empty-text').hide();
+                            contenedorMesa.find('.mesa-body').append(guestCard);
+                            contenedorMesa.find('.count').text(contenedorMesa.find('.guest-item').length);
+                        } else {
+                            panelSinAsignar.append(guestCard);
+                        }
+                    } else {
+                        panelSinAsignar.append(guestCard);
+                    }
+                });
+                
+                if (typeof actualizarAnalitica === "function") { actualizarAnalitica(); }
+            }
+        }
+    });
+}
+
+function dibujarMesaInteractiva(id_mesa, numero, capacidad, posX, posY) {
+    const posicionGuardada = localStorage.getItem('mesa_pos_evento_' + id_mesa);
+    if (posicionGuardada) {
+        const coords = JSON.parse(posicionGuardada);
+        posX = coords.x;
+        posY = coords.y;
+    }
+
+    const mesaHtml = `
+        <div class="mesa-card draggable-mesa shadow" id="mesa-db-${id_mesa}" data-id-mesa="${id_mesa}" data-capacidad="${capacidad}" style="position: absolute; top: ${posY}px; left: ${posX}px; width: 180px;">
+            <div class="mesa-header fw-bold text-center text-white py-1" style="background-color: #f472b6; border-radius: 6px 6px 0 0;">Mesa ${numero}</div>
+            <div class="mesa-body p-2" style="max-height: 140px; overflow-y: auto; overflow-x: hidden; background-color: white;">
+                <p class="text-muted small text-center m-0 empty-text">(Sin invitados)</p>
+            </div>
+            <div class="mesa-footer text-center small py-1" style="background-color: #fdf2f8; border-radius: 0 0 6px 6px; color: #ec4899; font-weight: 500;">
+                <span class="count">0</span> / ${capacidad} personas
+            </div>
+        </div>
+    `;
+    
+    const $mesa = $(mesaHtml);
+    $('#workspace-mesas').append($mesa);
+
+    $mesa.draggable({ 
+        containment: "#workspace-mesas", 
+        scroll: false,
+        stop: function(event, ui) {
+            const coords = { x: ui.position.left, y: ui.position.top };
+            localStorage.setItem('mesa_pos_evento_' + id_mesa, JSON.stringify(coords));
+        }
+    });
+}
+
 // ==========================================
 // FUNCIONES GLOBALES REUTILIZABLES (Frontend UI)
 // ==========================================
-function abrirModalOpcion(selectId, titulo) {
-    selectActual = selectId;
-    $('#tituloModalOpcion').text(`Nueva ${titulo}`);
-    $('#inputNuevaOpcion').val('');
-    new bootstrap.Modal('#modalNuevaOpcion').show();
+function abrirModalInvitado(modo, btn = null) {
+    $('#inv-mesa').empty();
+    $('#inv-mesa').append(new Option("Sin asignar (Flotante)", "S/A"));
+    
+    $('.mesa-card').each(function() {
+        const idMesa = $(this).data('id-mesa'); // El ID real de la BD
+        const numMesa = $(this).find('.mesa-header').text(); // Ejemplo: "Mesa 1"
+        $('#inv-mesa').append(new Option(numMesa, idMesa));
+    });
+
+    if(modo === 'nuevo') {
+        $('#tituloModalInvitado').text("Agregar Invitado");
+        $('#inv-nombre').val('');
+        $('#inv-menu').val('');
+        $('#inv-mesa').val('S/A');
+    } 
+    new bootstrap.Modal('#modalInvitado').show();
 }
 
 function eliminarOpcionSelect(selectId) {
     const val = $(selectId).val();
     if(val) $(`${selectId} option[value='${val}']`).remove();
-}
-
-function abrirModalInvitado(modo, btn = null) {
-    $('#inv-menu').empty();
-    let hayMenus = false;
-    $('.menu-name-span').each(function() {
-        const menuText = $(this).text();
-        $('#inv-menu').append(new Option(menuText, menuText));
-        hayMenus = true;
-    });
-    if(!hayMenus) $('#inv-menu').append(new Option("Sin menú configurado", "N/A"));
-
-    $('#inv-mesa').empty();
-    $('#inv-mesa').append(new Option("Sin asignar", "S/A"));
-    for(let i=1; i<=20; i++) {
-        $('#inv-mesa').append(new Option(`Mesa ${i}`, i));
-    }
-
-    if(modo === 'nuevo') {
-        filaEditando = null;
-        $('#tituloModalInvitado').text("Agregar Invitado");
-        $('#inv-nombre').val('');
-        $('#inv-mesa').val('S/A');
-    } else {
-        filaEditando = $(btn).closest('tr');
-        $('#tituloModalInvitado').text("Editar Invitado");
-        $('#inv-nombre').val($(filaEditando).find('.td-nombre').text());
-        $('#inv-menu').val($(filaEditando).find('.td-menu').text());
-        $('#inv-mesa').val($(filaEditando).find('.td-mesa').text());
-    }
-    new bootstrap.Modal('#modalInvitado').show();
-}
-
-function eliminarFila(btn) {
-    if(confirm("¿Eliminar este invitado?")) {
-        const gId = $(btn).closest('tr').data('id');
-        $(`.guest-item[data-id="${gId}"]`).remove();
-        $(btn).closest('tr').fadeOut(200, function() { 
-            $(this).remove(); 
-            actualizarAnalitica();
-        });
-    }
 }
 
 function actualizarAnalitica() {
@@ -247,13 +341,14 @@ $(document).ready(function() {
 
     // --- ARRANQUE AUTOMÁTICO DE DATOS ---
     if ($('#contenedor-eventos').length > 0) {
-        cargarEventos(); // Si estamos en el Dashboard, traemos tarjetas
+        cargarEventos(); 
     }
 
     const parametrosURL = new URLSearchParams(window.location.search);
     const idEvento = parametrosURL.get('id_evento'); 
     if (idEvento) {
-        cargarDetalleEvento(idEvento); // Si estamos en Gestión, traemos nombre real
+        cargarDetalleEvento(idEvento); 
+        cargarMesas(); // Esto arrancará las mesas y los invitados en el orden perfecto
     }
 
     // --- EVENTOS DEL LOGIN ---
@@ -300,7 +395,6 @@ $(document).ready(function() {
             success: function(response) {
                 if (response.status === 'success') {
                     alert(response.message); 
-                    
                     const modalElement = document.getElementById('modalCrearEvento');
                     const modalInstance = bootstrap.Modal.getInstance(modalElement);
                     if (modalInstance) modalInstance.hide();
@@ -308,8 +402,7 @@ $(document).ready(function() {
                     $('#nombre-ev').val('');
                     $('#fecha-ev').val('');
                     $('#lugar-ev').val('');
-                    
-                    cargarEventos(); // Refrescamos las tarjetas
+                    cargarEventos();
                 } else {
                     alert("Error al guardar en BD: " + response.message);
                 }
@@ -320,272 +413,378 @@ $(document).ready(function() {
 
     // --- EVENTOS DE GESTIÓN (gestion.html) ---
 
-    if ($('#eventTabs').length > 0) {
-
-        // Menús Dinámicos
-
-        $('#btn-guardar-opcion').off('click').on('click', function() {
-            const val = $('#inputNuevaOpcion').val().trim();
-            
-            if(val !== "" && selectActual) {
-                // Averiguamos qué catálogo estamos editando según el ID del select
-                let tipoCatalogo = (selectActual === '#edit-tipo') ? 'tipo_evento' : 'vestimenta';
-
-                $.ajax({
-                    url: 'php/agregar_catalogo.php',
-                    method: 'POST',
-                    data: { tipo_catalogo: tipoCatalogo, nombre: val },
-                    dataType: 'json',
-                    success: function(response) {
-                        if(response.status === 'success') {
-                            // Agregamos la opción al select usando el ID REAL de la base de datos
-                            $(selectActual).append(new Option(response.nombre, response.id));
-                            $(selectActual).val(response.id);
-                            
-                            // Cerramos el modal
-                            bootstrap.Modal.getInstance(document.getElementById('modalNuevaOpcion')).hide();
-                        } else {
-                            alert("Error al guardar: " + response.message);
-                        }
-                    }
-                });
-            }
-        });
-
-        $('#btn-add-menu-card').off('click').on('click', function() {
-            const menuName = $('#input-new-menu').val().trim();
-            const id_evento = new URLSearchParams(window.location.search).get('id_evento');
-
-            if(menuName !== "" && id_evento) {
-                $.ajax({
-                    url: 'php/agregar_menu.php',
-                    method: 'POST',
-                    data: { id_evento: id_evento, nombre_platillo: menuName },
-                    dataType: 'json',
-                    success: function(response) {
-                        if(response.status === 'success') {
-                            // Dibujamos la tarjetita rosa del platillo
-                            const cardHtml = `
-                                <div class="col-md-4 menu-card-item" data-id="${response.id_menu}">
-                                    <div class="card border-0 shadow-sm h-100" style="background-color: #fdf2f8;">
-                                        <div class="card-body d-flex justify-content-between align-items-center p-3">
-                                            <div>
-                                                <i class="bi bi-cup-hot text-primary-custom me-2"></i>
-                                                <span class="fw-medium text-dark menu-name-span">${response.nombre}</span>
-                                            </div>
-                                            <button class="btn btn-sm btn-outline-danger border-0 remove-menu-card" data-id="${response.id_menu}">
-                                                <i class="bi bi-trash3"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>`;
-                            $('#menu-cards-container').append(cardHtml);
-                            $('#input-new-menu').val(''); // Limpiamos la caja de texto
-                        } else {
-                            alert("Error: " + response.message);
-                        }
-                    }
-                });
-            }
-        });
-
-        $(document).on('click', '.remove-menu-card', function() {
-            $(this).closest('.menu-card-item').fadeOut(200, function() { $(this).remove(); });
-        });
-
-        
-        $('#btn-guardar-cambios').off('click').on('click', function() {
-            const id_evento = new URLSearchParams(window.location.search).get('id_evento');
-            const data = {
-                id_evento: id_evento,
-                nombre: $('#edit-nombre').val(),
-                id_tipo_evento: $('#edit-tipo').val(),
-                lugar: $('#edit-lugar').val(),
-                fecha: $('#edit-fecha').val(),
-                hora: $('#edit-hora').val(),
-                id_tipo_vestimenta: $('#edit-vestimenta').val()
-            };
-
+    // Menús Dinámicos
+    $('#btn-guardar-opcion').off('click').on('click', function() {
+        const val = $('#inputNuevaOpcion').val().trim();
+        if(val !== "" && selectActual) {
+            let tipoCatalogo = (selectActual === '#edit-tipo') ? 'tipo_evento' : 'vestimenta';
             $.ajax({
-                url: 'php/actualizar_evento.php', 
-                method: 'POST', 
-                data: data, 
+                url: 'php/agregar_catalogo.php',
+                method: 'POST',
+                data: { tipo_catalogo: tipoCatalogo, nombre: val },
                 dataType: 'json',
                 success: function(response) {
                     if(response.status === 'success') {
-                        alert('¡Tus cambios se han guardado!');
-                        $('#titulo-evento, #display-event-name').text(data.nombre);
-                    } else { 
-                        alert('Error al guardar: ' + response.message); 
+                        $(selectActual).append(new Option(response.nombre, response.id));
+                        $(selectActual).val(response.id);
+                        bootstrap.Modal.getInstance(document.getElementById('modalNuevaOpcion')).hide();
+                    } else {
+                        alert("Error al guardar: " + response.message);
                     }
-                },
-                error: function(xhr) {
-                    // ESTA ES LA LÍNEA MÁGICA QUE TE DIRÁ EL ERROR
-                    alert("El servidor detuvo el guardado. Error exacto: " + xhr.responseText);
                 }
             });
-        });
+        }
+    });
 
-        $('#btn-eliminar-evento').off('click').on('click', function() {
-            if(confirm("¿Estás seguro de eliminar TODO el evento? Esto no se puede deshacer.")) {
-                const id_evento = new URLSearchParams(window.location.search).get('id_evento');
-                $.ajax({
-                    url: 'php/eliminar_evento.php', method: 'POST', data: { id_evento: id_evento }, dataType: 'json',
-                    success: function(response) {
-                        if(response.status === 'success') {
-                            window.location.href = 'dashboard.html';
-                        } else { alert('Error al eliminar: ' + response.message); }
+    $('#btn-add-menu-card').off('click').on('click', function() {
+        const menuName = $('#input-new-menu').val().trim();
+        const id_evento = new URLSearchParams(window.location.search).get('id_evento');
+
+        if(menuName !== "" && id_evento) {
+            $.ajax({
+                url: 'php/agregar_menu.php',
+                method: 'POST',
+                data: { id_evento: id_evento, nombre_platillo: menuName },
+                dataType: 'json',
+                success: function(response) {
+                    if(response.status === 'success') {
+                        const cardHtml = `
+                            <div class="col-md-4 menu-card-item" data-id="${response.id_menu}">
+                                <div class="card border-0 shadow-sm h-100" style="background-color: #fdf2f8;">
+                                    <div class="card-body d-flex justify-content-between align-items-center p-3">
+                                        <div><i class="bi bi-cup-hot text-primary-custom me-2"></i><span class="fw-medium text-dark menu-name-span">${response.nombre}</span></div>
+                                        <button class="btn btn-sm btn-outline-danger border-0 remove-menu-card" data-id="${response.id_menu}"><i class="bi bi-trash3"></i></button>
+                                    </div>
+                                </div>
+                            </div>`;
+                        $('#menu-cards-container').append(cardHtml);
+                        $('#input-new-menu').val(''); 
+                    } else {
+                        alert("Error: " + response.message);
                     }
-                });
+                }
+            });
+        }
+    });
+
+    $(document).on('click', '.remove-menu-card', function() {
+        $(this).closest('.menu-card-item').fadeOut(200, function() { $(this).remove(); });
+    });
+
+    $('#btn-guardar-cambios').off('click').on('click', function() {
+        const id_evento = new URLSearchParams(window.location.search).get('id_evento');
+        const data = {
+            id_evento: id_evento,
+            nombre: $('#edit-nombre').val(),
+            id_tipo_evento: $('#edit-tipo').val(),
+            lugar: $('#edit-lugar').val(),
+            fecha: $('#edit-fecha').val(),
+            hora: $('#edit-hora').val(),
+            id_tipo_vestimenta: $('#edit-vestimenta').val()
+        };
+
+        $.ajax({
+            url: 'php/actualizar_evento.php', 
+            method: 'POST', 
+            data: data, 
+            dataType: 'json',
+            success: function(response) {
+                if(response.status === 'success') {
+                    alert('¡Tus cambios se han guardado!');
+                    $('#titulo-evento, #display-event-name').text(data.nombre);
+                } else { 
+                    alert('Error al guardar: ' + response.message); 
+                }
+            },
+            error: function(xhr) {
+                alert("El servidor detuvo el guardado. Error exacto: " + xhr.responseText);
             }
         });
+    });
 
-        // CRUD Invitados (FrontEnd)
-        $('#btn-guardar-invitado').click(function() {
-            const nombre = $('#inv-nombre').val();
-            const menu = $('#inv-menu').val();
-            const mesa = $('#inv-mesa').val();
+    $('#btn-eliminar-evento').off('click').on('click', function() {
+        if(confirm("¿Estás seguro de eliminar TODO el evento? Esto no se puede deshacer.")) {
+            const id_evento = new URLSearchParams(window.location.search).get('id_evento');
+            $.ajax({
+                url: 'php/eliminar_evento.php', method: 'POST', data: { id_evento: id_evento }, dataType: 'json',
+                success: function(response) {
+                    if(response.status === 'success') {
+                        window.location.href = 'dashboard.html';
+                    } else { alert('Error al eliminar: ' + response.message); }
+                }
+            });
+        }
+    });
 
-            if(!nombre) return alert("El nombre es obligatorio");
+    // Acomodo de Mesas y Zoom
+    function aplicarZoom() { $('#workspace-mesas').css('transform', `scale(${zoomLevel})`); }
+    $('#btn-zoom-in').click(function() { zoomLevel += 0.1; aplicarZoom(); });
+    $('#btn-zoom-out').click(function() { if(zoomLevel > 0.3) zoomLevel -= 0.1; aplicarZoom(); });
+    $('#btn-zoom-reset').click(function() { zoomLevel = 1.0; aplicarZoom(); });
 
-            if(filaEditando) {
-                $(filaEditando).find('.td-nombre').text(nombre);
-                $(filaEditando).find('.td-menu').text(menu);
-                $(filaEditando).find('.td-mesa').text(mesa);
-                $(`.guest-item[data-id="${$(filaEditando).data('id')}"]`).text(nombre);
-                filaEditando = null;
-            } else {
-                const guestId = 'guest-' + Date.now();
-                const tr = `
-                    <tr class="fila-invitado" data-id="${guestId}">
-                        <td class="td-nombre">${nombre}</td>
-                        <td><span class="badge bg-light text-dark border">Manual</span></td>
-                        <td class="td-menu">${menu}</td>
-                        <td class="text-center fw-bold text-muted td-mesa">${mesa}</td>
-                        <td class="text-end">
-                            <button class="btn btn-sm btn-outline-secondary me-1" onclick="abrirModalInvitado('editar', this)"><i class="bi bi-pencil"></i></button>
-                            <button class="btn btn-sm btn-outline-danger" onclick="eliminarFila(this)"><i class="bi bi-trash"></i></button>
-                        </td>
-                    </tr>`;
-                $('#tabla-invitados-body').append(tr);
-                $('#lista-invitados-sin-asignar').append(`<div class="guest-item shadow-sm" data-id="${guestId}">${nombre}</div>`);
+    $('#btn-crear-mesa').off('click').on('click', function() {
+        const id_evento = new URLSearchParams(window.location.search).get('id_evento');
+        const capacidad = $('#input-capacidad-mesa').val() || 8;
+
+        $.ajax({
+            url: 'php/agregar_mesa.php',
+            method: 'POST',
+            data: { id_evento: id_evento, capacidad: capacidad },
+            dataType: 'json',
+            success: function(response) {
+                if(response.status === 'success') {
+                    dibujarMesaInteractiva(response.id_mesa, response.numero_mesa, capacidad, 100, 100);
+                    actualizarAnalitica();
+                } else {
+                    alert("Error: " + response.message);
+                }
+            },
+            error: function(xhr) {
+                alert("Error del servidor: " + xhr.responseText);
             }
-            bootstrap.Modal.getInstance('#modalInvitado').hide();
-            actualizarAnalitica();
         });
+    });
 
-        // Acomodo de Mesas
-        function aplicarZoom() { $('#workspace-mesas').css('transform', `scale(${zoomLevel})`); }
+    // Eventos visuales para seleccionar invitados y mesas
+    $(document).on('click', '.guest-item', function(e) {
+        e.stopPropagation();
+        $('.guest-item').removeClass('selected');
+        $(this).addClass('selected');
+    });
 
-        $('#btn-zoom-in').click(function() { zoomLevel += 0.1; aplicarZoom(); });
-        $('#btn-zoom-out').click(function() { if(zoomLevel > 0.3) zoomLevel -= 0.1; aplicarZoom(); });
-        $('#btn-zoom-reset').click(function() { zoomLevel = 1.0; aplicarZoom(); });
+    $(document).on('click', '.mesa-card', function(e) {
+        $('.mesa-card').removeClass('selected');
+        $(this).addClass('selected');
+    });
 
-        $('#btn-crear-mesa').click(function() {
-            contadorMesas++;
-            const capacidad = $('#input-capacidad-mesa').val() || 8;
-            
-            const mesaHtml = `
-                <div class="mesa-card draggable-mesa shadow" id="mesa-${contadorMesas}" data-capacidad="${capacidad}" style="top: 100px; left: 100px;">
-                    <div class="mesa-header">Mesa ${contadorMesas}</div>
-                    <div class="mesa-body"><p class="text-muted small text-center m-0 empty-text">(Sin invitados)</p></div>
-                    <div class="mesa-footer"><span class="count">0</span> / ${capacidad} personas</div>
-                </div>
-            `;
-            
-            $('#workspace-mesas').append(mesaHtml);
-            $('.draggable-mesa').draggable({ containment: "#workspace-mesas", scroll: false });
-            actualizarAnalitica();
-        });
-
-        $(document).on('click', '.guest-item', function(e) {
-            e.stopPropagation();
-            $('.guest-item').removeClass('selected');
-            $(this).addClass('selected');
-        });
-
-        $(document).on('click', '.mesa-card', function(e) {
+    $('#workspace-mesas').click(function(e) {
+        if(e.target.id === 'workspace-mesas') {
             $('.mesa-card').removeClass('selected');
-            $(this).addClass('selected');
-        });
+            $('.guest-item').removeClass('selected');
+        }
+    });
 
-        $('#workspace-mesas').click(function(e) {
-            if(e.target.id === 'workspace-mesas') {
-                $('.mesa-card').removeClass('selected');
-                $('.guest-item').removeClass('selected');
+    // ASIGNAR y QUITAR con AJAX a la BD
+    $('#btn-asignar-invitado').off('click').on('click', function() {
+        const invSelected = $('#lista-invitados-sin-asignar .guest-item.selected');
+        const mesaSel = $('.mesa-card.selected');
+
+        if(invSelected.length === 0) return alert("Selecciona un invitado lateral.");
+        if(mesaSel.length === 0) return alert("Selecciona una mesa en el plano.");
+
+        const idInvitado = invSelected.data('id');
+        const idMesa = mesaSel.data('id-mesa'); 
+
+        const max = parseInt(mesaSel.data('capacidad'));
+        const actuales = mesaSel.find('.guest-item').length;
+        if(actuales >= max) return alert("Mesa llena.");
+
+        $.ajax({
+            url: 'php/actualizar_mesa_invitado.php',
+            method: 'POST',
+            data: { id_invitado: idInvitado, id_mesa: idMesa },
+            dataType: 'json',
+            success: function(response) {
+                if(response.status === 'success') {
+                    mesaSel.find('.empty-text').hide();
+                    invSelected.removeClass('selected').appendTo(mesaSel.find('.mesa-body'));
+                    mesaSel.find('.count').text(mesaSel.find('.guest-item').length);
+                    $(`tr[data-id="${idInvitado}"] .td-mesa`).text('Mesa ' + idMesa);
+                    actualizarAnalitica();
+                } else {
+                    alert("Error al asignar: " + response.message);
+                }
             }
         });
+    });
 
-        $('#btn-asignar-invitado').click(function() {
-            const invSelected = $('#lista-invitados-sin-asignar .guest-item.selected');
-            const mesaSel = $('.mesa-card.selected');
+    $('#btn-quitar-invitado').off('click').on('click', function() {
+        const invEnMesa = $('.mesa-card .guest-item.selected');
+        if(invEnMesa.length === 0) return alert("Selecciona un invitado dentro de una mesa.");
 
-            if(invSelected.length === 0) return alert("Selecciona un invitado lateral.");
-            if(mesaSel.length === 0) return alert("Selecciona una mesa en el plano.");
+        const idInvitado = invEnMesa.data('id');
+        const mesaOrigen = invEnMesa.closest('.mesa-card');
 
-            const max = parseInt(mesaSel.data('capacidad'));
-            const actuales = mesaSel.find('.guest-item').length;
-            if(actuales >= max) return alert("Mesa llena.");
-
-            mesaSel.find('.empty-text').hide();
-            invSelected.removeClass('selected').appendTo(mesaSel.find('.mesa-body'));
-            actualizarContadorMesa(mesaSel);
-            
-            const gId = invSelected.data('id');
-            const numMesa = mesaSel.find('.mesa-header').text().replace('Mesa ', '');
-            $(`tr[data-id="${gId}"] .td-mesa`).text(numMesa).removeClass('text-muted');
-            actualizarAnalitica();
-        });
-
-        $('#btn-quitar-invitado').click(function() {
-            const invEnMesa = $('.mesa-card .guest-item.selected');
-            if(invEnMesa.length === 0) return alert("Selecciona un invitado dentro de una mesa.");
-
-            const mesaOrigen = invEnMesa.closest('.mesa-card');
-            invEnMesa.removeClass('selected').appendTo('#lista-invitados-sin-asignar');
-
-            if(mesaOrigen.find('.guest-item').length === 0) mesaOrigen.find('.empty-text').show();
-            actualizarContadorMesa(mesaOrigen);
-            
-            const gId = invEnMesa.data('id');
-            $(`tr[data-id="${gId}"] .td-mesa`).text('S/A').addClass('text-muted');
-            actualizarAnalitica();
-        });
-
-        $('#btn-eliminar-mesa-seleccionada').click(function() {
-            const mesaSel = $('.mesa-card.selected');
-            if(mesaSel.length === 0) return alert("Selecciona mesa a eliminar.");
-
-            if(confirm("¿Eliminar esta mesa?")) {
-                mesaSel.find('.guest-item').each(function() {
-                    const gId = $(this).data('id');
-                    $(`tr[data-id="${gId}"] .td-mesa`).text('S/A').addClass('text-muted');
-                });
-                mesaSel.find('.guest-item').appendTo('#lista-invitados-sin-asignar');
-                mesaSel.remove();
-                actualizarAnalitica();
+        $.ajax({
+            url: 'php/actualizar_mesa_invitado.php',
+            method: 'POST',
+            data: { id_invitado: idInvitado, id_mesa: '' },
+            dataType: 'json',
+            success: function(response) {
+                if(response.status === 'success') {
+                    invEnMesa.removeClass('selected').appendTo('#lista-invitados-sin-asignar');
+                    if(mesaOrigen.find('.guest-item').length === 0) mesaOrigen.find('.empty-text').show();
+                    mesaOrigen.find('.count').text(mesaOrigen.find('.guest-item').length);
+                    $(`tr[data-id="${idInvitado}"] .td-mesa`).text('S/A');
+                    actualizarAnalitica();
+                } else {
+                    alert("Error al quitar asignación: " + response.message);
+                }
             }
         });
+    });
 
-        function actualizarContadorMesa(mesa) {
-            mesa.find('.count').text(mesa.find('.guest-item').length);
+    $('#btn-eliminar-mesa-seleccionada').off('click').on('click', function() {
+        const mesaSel = $('.mesa-card.selected');
+        if(mesaSel.length === 0) return alert("Selecciona mesa a eliminar.");
+
+        if(confirm("¿Estás seguro de eliminar esta mesa? Los invitados regresarán a la lista de 'Sin asignar'.")) {
+            const idMesa = mesaSel.data('id-mesa');
+
+            $.ajax({
+                url: 'php/eliminar_mesa.php',
+                method: 'POST',
+                data: { id_mesa: idMesa },
+                dataType: 'json',
+                success: function(response) {
+                    if(response.status === 'success') {
+                        //Regresamos los invitados al panel derecho
+                        mesaSel.find('.guest-item').each(function() {
+                            const gId = $(this).data('id');
+                            $(`tr[data-id="${gId}"] .td-mesa`).text('S/A').addClass('text-muted');
+                        });
+                        mesaSel.find('.guest-item').appendTo('#lista-invitados-sin-asignar');
+                        
+                        //Eliminamos la mesa 
+                        mesaSel.remove();
+                        
+                        // 3. Borramos sus coordenadas
+                        localStorage.removeItem('mesa_pos_evento_' + idMesa);
+                        
+                        actualizarAnalitica();
+                    } else {
+                        alert("Error al eliminar: " + response.message);
+                    }
+                }
+            });
+        }
+    });
+
+    $('#btn-exportar-mapa').off('click').on('click', function() {
+        const btn = $(this);
+        const originalText = btn.html();
+
+        if (typeof html2canvas === 'undefined') {
+            alert("Error: La librería html2canvas no cargó. Verifica que pusiste el <script> en tu gestion.html.");
+            return;
+        }
+        
+        btn.html('<i class="bi bi-hourglass-split me-1"></i> Generando foto...');
+        btn.prop('disabled', true);
+        $('.mesa-card').removeClass('selected');
+
+        const zoomAnterior = zoomLevel;
+        $('#workspace-mesas').css('transform', 'none');
+
+        //Tomamos la foto
+        html2canvas(document.getElementById("workspace-mesas"), {
+            backgroundColor: "#fffafb",
+            scale: 2
+        }).then(canvas => {
+            let enlace = document.createElement('a');
+            enlace.download = 'Plano_Mesas_EventMaster.png';
+            enlace.href = canvas.toDataURL("image/png");
+            enlace.click();
+            
+            //Restauramos el boton y el zoom a como estaban
+            btn.html(originalText);
+            btn.prop('disabled', false);
+            $('#workspace-mesas').css('transform', `scale(${zoomAnterior})`);
+            
+        }).catch(err => {
+            alert("Hubo un problema al generar la imagen. Presiona F12 para ver la consola.");
+            console.error("Error de html2canvas:", err);
+            
+            btn.html(originalText);
+            btn.prop('disabled', false);
+            $('#workspace-mesas').css('transform', `scale(${zoomAnterior})`);
+        });
+    });
+
+    $(document).on('shown.bs.tab', 'button[data-bs-target="#tab-reportes"]', function() {
+        actualizarAnalitica();
+    });
+
+    //Eliminar Invitado
+    $(document).on('click', '.btn-eliminar-invitado', function() {
+        if(confirm("¿Estás seguro de que deseas eliminar a este invitado?")) {
+            const idInvitado = $(this).data('id');
+            $.ajax({
+                url: 'php/eliminar_invitado.php',
+                method: 'POST',
+                data: { id_invitado: idInvitado },
+                dataType: 'json',
+                success: function(response) {
+                    if(response.status === 'success') {
+                        cargarInvitados(); 
+                    } else {
+                        alert("Error: " + response.message);
+                    }
+                }
+            });
+        }
+    });
+
+    $('#btn-exportar-excel').off('click').on('click', function() {
+        const id_evento = new URLSearchParams(window.location.search).get('id_evento');
+        if (id_evento) {
+            window.location.href = 'php/exportar_excel.php?id_evento=' + id_evento;
+        }
+    });
+
+    // Guardar nuevo invitado desde el Modal
+    $('#btn-guardar-invitado').off('click').on('click', function() {
+        const id_evento = new URLSearchParams(window.location.search).get('id_evento');
+        const nombre = $('#inv-nombre').val().trim();
+        const id_menu = $('#inv-menu').val();
+        const id_mesa = $('#inv-mesa').val(); 
+
+        if(nombre === "") {
+            alert("El nombre del invitado no puede estar vacío.");
+            return;
         }
 
-        $('#btn-exportar-mapa').click(function() {
-            alert("¡El mapa de mesas se ha exportado correctamente como imagen (PNG)!");
-        });
+        // validacion
+        if (id_mesa !== 'S/A') {
+            const mesaSeleccionada = $(`#mesa-db-${id_mesa}`);
+            if (mesaSeleccionada.length > 0) {
+                const maximo = parseInt(mesaSeleccionada.data('capacidad'));
+                const actuales = mesaSeleccionada.find('.guest-item').length;
+                
+                if (actuales >= maximo) {
+                    alert(`¡Alto ahí! La Mesa ${mesaSeleccionada.find('.mesa-header').text().replace('Mesa ', '')} ya está a su máxima capacidad (${maximo}/${maximo}). Elige otra mesa o guárdalo como Sin asignar.`);
+                    return; // Detiene el proceso y no guarda nada
+                }
+            }
+        }
 
-        $(document).on('shown.bs.tab', 'button[data-bs-target="#tab-reportes"]', function() {
-            actualizarAnalitica();
+        $.ajax({
+            url: 'php/agregar_invitado.php',
+            method: 'POST',
+            data: { 
+                id_evento: id_evento, 
+                nombre_completo: nombre, 
+                id_menu: id_menu, 
+                id_mesa: id_mesa 
+            },
+            dataType: 'json',
+            success: function(response) {
+                if(response.status === 'success') {
+                    bootstrap.Modal.getInstance(document.getElementById('modalInvitado')).hide();
+                    $('#inv-nombre').val('');
+                    $('#inv-menu').val('');
+                    $('#inv-mesa').val('S/A');
+                    
+                    cargarInvitados(); 
+                } else {
+                    alert("Error al guardar: " + response.message);
+                }
+            },
+            error: function(xhr) {
+                alert("Error crítico del servidor: " + xhr.responseText);
+            }
         });
-
-        $('.fila-invitado').each(function() {
-            let nombre = $(this).find('.td-nombre').text();
-            let gId = $(this).data('id');
-            $('#lista-invitados-sin-asignar').append(`<div class="guest-item shadow-sm" data-id="${gId}">${nombre}</div>`);
-        });
-        actualizarAnalitica();
-    }
+    });
 
     // --- EVENTOS DE INVITADO (invitado.html) ---
     if ($('#vista-invitacion').length > 0) {
@@ -603,7 +802,6 @@ $(document).ready(function() {
         let contadorAcompanantes = 0;
         $('#btn-agregar-acompanante').click(function() {
             contadorAcompanantes++;
-            
             let menuOptions = '<option value="">Elige una opción...</option>';
             menuOptions += `<option value="Res">Res</option>`;
             menuOptions += `<option value="Pollo">Pollo</option>`;
@@ -646,5 +844,4 @@ $(document).ready(function() {
             contadorAcompanantes = 0;
         });
     }
-
 });

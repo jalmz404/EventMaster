@@ -130,3 +130,23 @@ body {
 .icon-box { width: 64px; height: 64px; background-color: #fce7f3; color: var(--primary); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin-bottom: 1.5rem; }
 .hover-card { transition: all 0.3s ease; }
 .hover-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(236, 72, 153, 0.1) !important; border-color: #fbcfe8 !important; }
+
+
+/* Limitar la altura del cuerpo de la mesa */
+.mesa-body {
+    min-height: 60px;
+    max-height: 140px; 
+    overflow-y: auto;  
+    overflow-x: hidden;
+}
+
+.mesa-body::-webkit-scrollbar {
+    width: 5px;
+}
+.mesa-body::-webkit-scrollbar-track {
+    background: #fdf2f8; 
+}
+.mesa-body::-webkit-scrollbar-thumb {
+    background-color: #f472b6; 
+    border-radius: 10px;
+}
