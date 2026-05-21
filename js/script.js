@@ -165,10 +165,10 @@ function cargarInvitados() {
                     const numMesaText = invitado.id_mesa ? `Mesa ${invitado.id_mesa}` : 'S/A';
                     
                     const filaHtml = `
-                        <tr data-id="${invitado.id_invitado}">
+                        <tr class="fila-invitado" data-id="${invitado.id_invitado}">
                             <td class="td-nombre">${invitado.nombre_completo}</td>
                             <td><span class="badge bg-light text-dark border">Principal</span></td>
-                            <td>${menuText}</td>
+                            <td class="td-menu">${menuText}</td>
                             <td class="text-center fw-bold text-muted td-mesa">${numMesaText}</td>
                             <td class="text-end">
                                 <button class="btn btn-sm btn-outline-danger btn-eliminar-invitado" data-id="${invitado.id_invitado}"><i class="bi bi-trash3"></i></button>
@@ -786,6 +786,32 @@ $(document).ready(function() {
         });
     });
 
+    // EXPORTAR REPORTE A PDF
+    $('#btn-descargar-pdf').off('click').on('click', function() {
+        const btn = $(this);
+        const originalText = btn.html();
+        
+        btn.html('<i class="bi bi-hourglass-split me-2"></i>Generando...');
+        btn.prop('disabled', true);
+
+        //Seleccionamos toda la pestaña de reportes
+        const elemento = document.getElementById('tab-reportes');
+        
+        //Configuramos el PDF
+        const opciones = {
+            margin:       10,
+            filename:     'Reporte_Logistico_EventMaster.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+        };
+
+        html2pdf().set(opciones).from(elemento).save().then(() => {
+            btn.html(originalText);
+            btn.prop('disabled', false);
+        });
+    });
+
     // --- EVENTOS DE INVITADO (invitado.html) ---
     if ($('#vista-invitacion').length > 0) {
         
@@ -845,3 +871,4 @@ $(document).ready(function() {
         });
     }
 });
+
