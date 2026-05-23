@@ -268,6 +268,13 @@ function abrirModalInvitado(modo, btn = null) {
     new bootstrap.Modal('#modalInvitado').show();
 }
 
+function abrirModalOpcion(selector, titulo) {
+    selectActual = selector; 
+    $('#tituloModalOpcion').text('Añadir ' + titulo);
+    $('#inputNuevaOpcion').val('');
+    new bootstrap.Modal(document.getElementById('modalNuevaOpcion')).show();
+}
+
 function eliminarOpcionSelect(selectId) {
     const val = $(selectId).val();
     if(val) $(`${selectId} option[value='${val}']`).remove();
@@ -360,7 +367,8 @@ $(document).ready(function() {
 
     const parametrosURL = new URLSearchParams(window.location.search);
     const idEvento = parametrosURL.get('id_evento'); 
-    if (idEvento) {
+    
+    if (idEvento && $('#vista-invitacion').length === 0) {
         cargarDetalleEvento(idEvento); 
         cargarMesas();
         generarQReLink();
