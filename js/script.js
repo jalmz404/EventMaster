@@ -526,17 +526,39 @@ $(document).ready(function() {
     });
 
     $('#btn-eliminar-evento').off('click').on('click', function() {
-        if(confirm("¿Estás seguro de eliminar TODO el evento? Esto no se puede deshacer.")) {
-            const id_evento = new URLSearchParams(window.location.search).get('id_evento');
-            $.ajax({
-                url: 'php/eliminar_evento.php', method: 'POST', data: { id_evento: id_evento }, dataType: 'json',
-                success: function(response) {
-                    if(response.status === 'success') {
-                        window.location.href = 'dashboard.html';
-                    } else { alert('Error al eliminar: ' + response.message); }
-                }
-            });
-        }
+        const id_evento = new URLSearchParams(window.location.search).get('id_evento');
+        
+        Swal.fire({
+            title: '¿ELIMINAR EVENTO?',
+            text: '¡Esta acción borrará de forma permanente todo el evento y sus invitados! ¿Deseas proceder?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'SÍ, ELIMINAR',
+            cancelButtonText: 'CANCELAR',
+            reverseButtons: true,
+            customClass: {
+                popup: 'alerta-rosa-popup',
+                title: 'alerta-rosa-titulo',
+                htmlContainer: 'alerta-rosa-texto',
+                icon: 'alerta-rosa-icono',
+                confirmButton: 'alerta-rosa-btn-confirmar',
+                cancelButton: 'alerta-rosa-btn-cancelar'
+            },
+            buttonsStyling: false
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: 'php/eliminar_evento.php', method: 'POST', data: { id_evento: id_evento }, dataType: 'json',
+                    success: function(response) {
+                        if(response.status === 'success') {
+                            window.location.href = 'dashboard.html';
+                        } else { 
+                            Swal.fire({ title: 'Error', text: response.message, icon: 'error' }); 
+                        }
+                    }
+                });
+            }
+        });
     });
 
     // Acomodo de Mesas y Zoom
@@ -647,40 +669,56 @@ $(document).ready(function() {
         });
     });
 
-    $('#btn-eliminar-mesa-seleccionada').off('click').on('click', function() {
+$('#btn-eliminar-mesa-seleccionada').off('click').on('click', function() {
         const mesaSel = $('.mesa-card.selected');
-        if(mesaSel.length === 0) return alert("Selecciona mesa a eliminar.");
-
-        if(confirm("¿Estás seguro de eliminar esta mesa? Los invitados regresarán a la lista de 'Sin asignar'.")) {
-            const idMesa = mesaSel.data('id-mesa');
-
-            $.ajax({
-                url: 'php/eliminar_mesa.php',
-                method: 'POST',
-                data: { id_mesa: idMesa },
-                dataType: 'json',
-                success: function(response) {
-                    if(response.status === 'success') {
-                        //Regresamos los invitados al panel derecho
-                        mesaSel.find('.guest-item').each(function() {
-                            const gId = $(this).data('id');
-                            $(`tr[data-id="${gId}"] .td-mesa`).text('S/A').addClass('text-muted');
-                        });
-                        mesaSel.find('.guest-item').appendTo('#lista-invitados-sin-asignar');
-                        
-                        //Eliminamos la mesa 
-                        mesaSel.remove();
-                        
-                        // 3. Borramos sus coordenadas
-                        localStorage.removeItem('mesa_pos_evento_' + idMesa);
-                        
-                        actualizarAnalitica();
-                    } else {
-                        alert("Error al eliminar: " + response.message);
-                    }
-                }
-            });
+        if(mesaSel.length === 0) {
+            Swal.fire({ title: 'Atención', text: 'Selecciona una mesa en el plano para poder eliminarla.', icon: 'info' });
+            return;
         }
+
+        const idMesa = mesaSel.data('id-mesa');
+
+        Swal.fire({
+            title: '¿ELIMINAR MESA?',
+            text: '¿Estás seguro de eliminar esta mesa? Los invitados asignados regresarán a la lista de "Sin asignar".',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'SÍ, ELIMINAR',
+            cancelButtonText: 'CANCELAR',
+            reverseButtons: true,
+            customClass: {
+                popup: 'alerta-rosa-popup',
+                title: 'alerta-rosa-titulo',
+                htmlContainer: 'alerta-rosa-texto',
+                icon: 'alerta-rosa-icono',
+                confirmButton: 'alerta-rosa-btn-confirmar',
+                cancelButton: 'alerta-rosa-btn-cancelar'
+            },
+            buttonsStyling: false
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: 'php/eliminar_mesa.php',
+                    method: 'POST',
+                    data: { id_mesa: idMesa },
+                    dataType: 'json',
+                    success: function(response) {
+                        if(response.status === 'success') {
+                            mesaSel.find('.guest-item').each(function() {
+                                const gId = $(this).data('id');
+                                $(`tr[data-id="${gId}"] .td-mesa`).text('S/A').addClass('text-muted');
+                            });
+                            mesaSel.find('.guest-item').appendTo('#lista-invitados-sin-asignar');
+                            mesaSel.remove();
+                            localStorage.removeItem('mesa_pos_evento_' + idMesa);
+                            actualizarAnalitica();
+                        } else {
+                            Swal.fire({ title: 'Error', text: response.message, icon: 'error' });
+                        }
+                    }
+                });
+            }
+        });
     });
 
     $('#btn-exportar-mapa').off('click').on('click', function() {
@@ -728,24 +766,43 @@ $(document).ready(function() {
         actualizarAnalitica();
     });
 
-    //Eliminar Invitado
-    $(document).on('click', '.btn-eliminar-invitado', function() {
-        if(confirm("¿Estás seguro de que deseas eliminar a este invitado?")) {
-            const idInvitado = $(this).data('id');
-            $.ajax({
-                url: 'php/eliminar_invitado.php',
-                method: 'POST',
-                data: { id_invitado: idInvitado },
-                dataType: 'json',
-                success: function(response) {
-                    if(response.status === 'success') {
-                        cargarInvitados(); 
-                    } else {
-                        alert("Error: " + response.message);
+$(document).on('click', '.btn-eliminar-invitado', function() {
+        const idInvitado = $(this).data('id');
+        
+        Swal.fire({
+            title: '¿ELIMINAR INVITADO?',
+            text: '¿Estás seguro de que deseas eliminar a este invitado del evento?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'SÍ, ELIMINAR',
+            cancelButtonText: 'CANCELAR',
+            reverseButtons: true,
+            customClass: {
+                popup: 'alerta-rosa-popup',
+                title: 'alerta-rosa-titulo',
+                htmlContainer: 'alerta-rosa-texto',
+                icon: 'alerta-rosa-icono',
+                confirmButton: 'alerta-rosa-btn-confirmar',
+                cancelButton: 'alerta-rosa-btn-cancelar'
+            },
+            buttonsStyling: false
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: 'php/eliminar_invitado.php',
+                    method: 'POST',
+                    data: { id_invitado: idInvitado },
+                    dataType: 'json',
+                    success: function(response) {
+                        if(response.status === 'success') {
+                            cargarInvitados(); 
+                        } else {
+                            Swal.fire({ title: 'Error', text: response.message, icon: 'error' });
+                        }
                     }
-                }
-            });
-        }
+                });
+            }
+        });
     });
 
     $('#btn-exportar-excel').off('click').on('click', function() {
@@ -767,7 +824,7 @@ $(document).ready(function() {
             return;
         }
 
-        // validacion
+
         if (id_mesa !== 'S/A') {
             const mesaSeleccionada = $(`#mesa-db-${id_mesa}`);
             if (mesaSeleccionada.length > 0) {
@@ -775,8 +832,21 @@ $(document).ready(function() {
                 const actuales = mesaSeleccionada.find('.guest-item').length;
                 
                 if (actuales >= maximo) {
-                    alert(`¡Alto ahí! La Mesa ${mesaSeleccionada.find('.mesa-header').text().replace('Mesa ', '')} ya está a su máxima capacidad (${maximo}/${maximo}). Elige otra mesa o guárdalo como Sin asignar.`);
-                    return; // Detiene el proceso y no guarda nada
+                    Swal.fire({
+                        title: 'MESA LLENA',
+                        text: `La Mesa ${mesaSeleccionada.find('.mesa-header').text().replace('Mesa ', '')} ya alcanzó su capacidad máxima (${maximo}/${maximo}).`,
+                        icon: 'warning',
+                        confirmButtonText: 'ENTENDIDO',
+                        customClass: {
+                            popup: 'alerta-rosa-popup',
+                            title: 'alerta-rosa-titulo',
+                            htmlContainer: 'alerta-rosa-texto',
+                            icon: 'alerta-rosa-icono',
+                            confirmButton: 'alerta-rosa-btn-confirmar'
+                        },
+                        buttonsStyling: false
+                    });
+                    return; 
                 }
             }
         }

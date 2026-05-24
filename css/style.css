@@ -150,3 +150,72 @@ body {
     background-color: #f472b6; 
     border-radius: 10px;
 }
+/* Contenedor principal de la alerta */
+.alerta-rosa-popup {
+    background-color: var(--bg-light) !important; /* Fondo rosa pastel del proyecto */
+    border: 3px solid var(--primary) !important;   /* Borde rosa brillante */
+    border-radius: 16px !important;               /* Bordes redondeados integrados */
+    box-shadow: 0 10px 30px rgba(236, 72, 153, 0.15) !important; /* Sombra suave */
+}
+
+/* Título de la alerta */
+.alerta-rosa-titulo {
+    color: var(--text-main) !important;
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 700 !important;
+    font-size: 1.5rem !important;
+    margin-top: 15px !important;
+}
+
+/* Texto de descripción */
+.alerta-rosa-texto {
+    color: var(--text-muted) !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 0.95rem !important;
+}
+
+/* Icono de advertencia en color rosa del sistema */
+.alerta-rosa-icono {
+    border-color: var(--primary) !important;
+    color: var(--primary) !important;
+}
+.alerta-rosa-icono .swal2-icon-content {
+    color: var(--primary) !important;
+}
+
+/* Botón de Confirmación (Sí, eliminar) */
+.alerta-rosa-btn-confirmar {
+    background-color: var(--primary) !important;
+    color: white !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    padding: 10px 24px !important;
+    margin: 0 8px !important;
+    border: none !important;
+    transition: all 0.2s !important;
+}
+.alerta-rosa-btn-confirmar:hover {
+    background-color: var(--primary-hover) !important;
+}
+
+/* Botón de Cancelación */
+.alerta-rosa-btn-cancelar {
+    background-color: #f1f5f9 !important;
+    color: #475569 !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    padding: 10px 24px !important;
+    margin: 0 8px !important;
+    border: none !important;
+}
+.alerta-rosa-btn-cancelar:hover {
+    background-color: #e2e8f0 !important;
+}
+
+/* Estilo del signo de exclamación interno de SweetAlert2 */
+.alerta-rosa-icono.swal2-warning {
+    border-color: var(--primary) !important;
+}
+.alerta-rosa-icono.swal2-warning .swal2-icon-content {
+    color: var(--primary) !important;
+}
