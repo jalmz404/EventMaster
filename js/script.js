@@ -276,8 +276,39 @@ function abrirModalOpcion(selector, titulo) {
 }
 
 function eliminarOpcionSelect(selectId) {
+    console.log("Clic detectado. Intentando eliminar en:", selectId);
+
     const val = $(selectId).val();
-    if(val) $(`${selectId} option[value='${val}']`).remove();
+    
+    //Si el select está vacío avisamos
+    if(!val) {
+        alert("No hay ninguna opción seleccionada para eliminar.");
+        return; 
+    }
+
+    let tipoCatalogo = (selectId === '#edit-tipo') ? 'tipo_evento' : 'vestimenta';
+    console.log("El ID a borrar es:", val, "de la tabla:", tipoCatalogo);
+
+    if(confirm("¿Seguro que deseas eliminar esta opción de la base de datos?")) {
+        $.ajax({
+            url: 'php/eliminar_catalogo.php', 
+            method: 'POST',
+            data: { id: val, tipo_catalogo: tipoCatalogo },
+            dataType: 'json',
+            success: function(response) {
+                if(response.status === 'success') {
+                    $(`${selectId} option[value='${val}']`).remove();
+                    alert("Opción eliminada correctamente.");
+                } else {
+                    alert("Error en la BD: " + response.message);
+                }
+            },
+            error: function(xhr) {
+                alert("Error de comunicación con el servidor. Presiona F12 para ver detalles.");
+                console.error("Error del servidor:", xhr.responseText);
+            }
+        });
+    }
 }
 
 function actualizarAnalitica() {
@@ -491,9 +522,28 @@ $(document).ready(function() {
     });
 
     $(document).on('click', '.remove-menu-card', function() {
-        $(this).closest('.menu-card-item').fadeOut(200, function() { $(this).remove(); });
-    });
+    const btn = $(this);
+    const idMenu = btn.data('id');
 
+    if(confirm("¿Seguro que deseas eliminar este platillo?")) {
+        $.ajax({
+            url: 'php/eliminar_menu.php', 
+            method: 'POST',
+            data: { id_menu: idMenu },
+            dataType: 'json',
+            success: function(response) {
+                if(response.status === 'success') {
+                    btn.closest('.menu-card-item').fadeOut(200, function() { $(this).remove(); });
+                } else {
+                    alert("Error al eliminar en la BD: " + response.message);
+                }
+            },
+            error: function() {
+                alert("Error de comunicación con el servidor.");
+            }
+        });
+    }
+});
     $('#btn-guardar-cambios').off('click').on('click', function() {
         const id_evento = new URLSearchParams(window.location.search).get('id_evento');
         const data = {
