@@ -102,8 +102,14 @@ function cargarDetalleEvento(id) {
                 });
 
             } else {
-                alert("No se pudo cargar el evento: " + response.message);
-                window.location.href = 'dashboard.html'; 
+                Swal.fire({
+                    title: 'Error',
+                    text: "No se pudo cargar el evento: " + response.message,
+                    icon: 'error',
+                    confirmButtonText: 'ACEPTAR',
+                    customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' },
+                    buttonsStyling: false
+                }).then(() => { window.location.href = 'dashboard.html'; });
             }
         }
     });
@@ -282,14 +288,32 @@ function eliminarOpcionSelect(selectId) {
     
     //Si el select está vacío avisamos
     if(!val) {
-        alert("No hay ninguna opción seleccionada para eliminar.");
+        Swal.fire({
+            title: 'Atención',
+            text: 'No hay ninguna opción seleccionada para eliminar.',
+            icon: 'warning',
+            confirmButtonText: 'ENTENDIDO',
+            customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' },
+            buttonsStyling: false
+        });
         return; 
     }
 
     let tipoCatalogo = (selectId === '#edit-tipo') ? 'tipo_evento' : 'vestimenta';
     console.log("El ID a borrar es:", val, "de la tabla:", tipoCatalogo);
 
-    if(confirm("¿Seguro que deseas eliminar esta opción de la base de datos?")) {
+    Swal.fire({
+        title: '¿Eliminar opción?',
+        text: '¿Seguro que deseas eliminar esta opción de la base de datos?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'SÍ, ELIMINAR',
+        cancelButtonText: 'CANCELAR',
+        reverseButtons: true,
+        customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar', cancelButton: 'alerta-rosa-btn-cancelar' },
+        buttonsStyling: false
+    }).then((result) => {
+        if (result.isConfirmed) {
         $.ajax({
             url: 'php/eliminar_catalogo.php', 
             method: 'POST',
@@ -298,17 +322,25 @@ function eliminarOpcionSelect(selectId) {
             success: function(response) {
                 if(response.status === 'success') {
                     $(`${selectId} option[value='${val}']`).remove();
-                    alert("Opción eliminada correctamente.");
+                    Swal.fire({
+                        title: '¡Eliminado!',
+                        text: 'Opción eliminada correctamente.',
+                        icon: 'success',
+                        confirmButtonText: 'ACEPTAR',
+                        customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' },
+                        buttonsStyling: false
+                    });
                 } else {
-                    alert("Error en la BD: " + response.message);
+                    Swal.fire({ title: 'Error', text: 'Error en la BD: ' + response.message, icon: 'error', confirmButtonText: 'ACEPTAR', customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' }, buttonsStyling: false });
                 }
             },
             error: function(xhr) {
-                alert("Error de comunicación con el servidor. Presiona F12 para ver detalles.");
+                Swal.fire({ title: 'Error de servidor', text: 'Error de comunicación con el servidor. Presiona F12 para ver detalles.', icon: 'error', confirmButtonText: 'ACEPTAR', customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' }, buttonsStyling: false });
                 console.error("Error del servidor:", xhr.responseText);
             }
         });
-    }
+        }
+    });
 }
 
 function actualizarAnalitica() {
@@ -439,7 +471,10 @@ $(document).ready(function() {
         const fecha = $('#fecha-ev').val();
         const lugar = $('#lugar-ev').val();
 
-        if(!nombre || !fecha || !lugar) return alert("Completa los campos.");
+        if(!nombre || !fecha || !lugar) {
+            Swal.fire({ title: 'Campos incompletos', text: 'Por favor completa todos los campos.', icon: 'warning', confirmButtonText: 'ENTENDIDO', customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' }, buttonsStyling: false });
+            return;
+        }
         
         $.ajax({
             url: 'php/crear_evento.php',
@@ -448,7 +483,14 @@ $(document).ready(function() {
             dataType: 'json',
             success: function(response) {
                 if (response.status === 'success') {
-                    alert(response.message); 
+                    Swal.fire({
+                        title: '¡Evento creado!',
+                        text: response.message,
+                        icon: 'success',
+                        confirmButtonText: 'ACEPTAR',
+                        customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' },
+                        buttonsStyling: false
+                    });
                     const modalElement = document.getElementById('modalCrearEvento');
                     const modalInstance = bootstrap.Modal.getInstance(modalElement);
                     if (modalInstance) modalInstance.hide();
@@ -458,10 +500,12 @@ $(document).ready(function() {
                     $('#lugar-ev').val('');
                     cargarEventos();
                 } else {
-                    alert("Error al guardar en BD: " + response.message);
+                    Swal.fire({ title: 'Error', text: 'Error al guardar en BD: ' + response.message, icon: 'error', confirmButtonText: 'ACEPTAR', customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' }, buttonsStyling: false });
                 }
             },
-            error: function() { alert("No se pudo conectar con el servidor."); }
+            error: function() {
+                Swal.fire({ title: 'Error de conexión', text: 'No se pudo conectar con el servidor.', icon: 'error', confirmButtonText: 'ACEPTAR', customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' }, buttonsStyling: false });
+            }
         });
     });
 
@@ -483,7 +527,7 @@ $(document).ready(function() {
                         $(selectActual).val(response.id);
                         bootstrap.Modal.getInstance(document.getElementById('modalNuevaOpcion')).hide();
                     } else {
-                        alert("Error al guardar: " + response.message);
+                        Swal.fire({ title: 'Error', text: 'Error al guardar: ' + response.message, icon: 'error', confirmButtonText: 'ACEPTAR', customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' }, buttonsStyling: false });
                     }
                 }
             });
@@ -514,7 +558,7 @@ $(document).ready(function() {
                         $('#menu-cards-container').append(cardHtml);
                         $('#input-new-menu').val(''); 
                     } else {
-                        alert("Error: " + response.message);
+                        Swal.fire({ title: 'Error', text: 'Error: ' + response.message, icon: 'error', confirmButtonText: 'ACEPTAR', customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' }, buttonsStyling: false });
                     }
                 }
             });
@@ -525,7 +569,18 @@ $(document).ready(function() {
     const btn = $(this);
     const idMenu = btn.data('id');
 
-    if(confirm("¿Seguro que deseas eliminar este platillo?")) {
+    Swal.fire({
+        title: '¿Eliminar platillo?',
+        text: '¿Seguro que deseas eliminar este platillo?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'SÍ, ELIMINAR',
+        cancelButtonText: 'CANCELAR',
+        reverseButtons: true,
+        customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar', cancelButton: 'alerta-rosa-btn-cancelar' },
+        buttonsStyling: false
+    }).then((result) => {
+        if (result.isConfirmed) {
         $.ajax({
             url: 'php/eliminar_menu.php', 
             method: 'POST',
@@ -535,14 +590,15 @@ $(document).ready(function() {
                 if(response.status === 'success') {
                     btn.closest('.menu-card-item').fadeOut(200, function() { $(this).remove(); });
                 } else {
-                    alert("Error al eliminar en la BD: " + response.message);
+                    Swal.fire({ title: 'Error', text: 'Error al eliminar en la BD: ' + response.message, icon: 'error', confirmButtonText: 'ACEPTAR', customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' }, buttonsStyling: false });
                 }
             },
             error: function() {
-                alert("Error de comunicación con el servidor.");
+                Swal.fire({ title: 'Error de conexión', text: 'Error de comunicación con el servidor.', icon: 'error', confirmButtonText: 'ACEPTAR', customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' }, buttonsStyling: false });
             }
         });
-    }
+        }
+    });
 });
     $('#btn-guardar-cambios').off('click').on('click', function() {
         const id_evento = new URLSearchParams(window.location.search).get('id_evento');
@@ -563,14 +619,21 @@ $(document).ready(function() {
             dataType: 'json',
             success: function(response) {
                 if(response.status === 'success') {
-                    alert('¡Tus cambios se han guardado!');
+                    Swal.fire({
+                        title: '¡Guardado!',
+                        text: '¡Tus cambios se han guardado!',
+                        icon: 'success',
+                        confirmButtonText: 'ACEPTAR',
+                        customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' },
+                        buttonsStyling: false
+                    });
                     $('#titulo-evento, #display-event-name').text(data.nombre);
                 } else { 
-                    alert('Error al guardar: ' + response.message); 
+                    Swal.fire({ title: 'Error', text: 'Error al guardar: ' + response.message, icon: 'error', confirmButtonText: 'ACEPTAR', customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' }, buttonsStyling: false });
                 }
             },
             error: function(xhr) {
-                alert("El servidor detuvo el guardado. Error exacto: " + xhr.responseText);
+                Swal.fire({ title: 'Error de servidor', text: 'El servidor detuvo el guardado. Error exacto: ' + xhr.responseText, icon: 'error', confirmButtonText: 'ACEPTAR', customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' }, buttonsStyling: false });
             }
         });
     });
@@ -631,11 +694,11 @@ $(document).ready(function() {
                     dibujarMesaInteractiva(response.id_mesa, response.numero_mesa, capacidad, 100, 100);
                     actualizarAnalitica();
                 } else {
-                    alert("Error: " + response.message);
+                    Swal.fire({ title: 'Error', text: 'Error: ' + response.message, icon: 'error', confirmButtonText: 'ACEPTAR', customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' }, buttonsStyling: false });
                 }
             },
             error: function(xhr) {
-                alert("Error del servidor: " + xhr.responseText);
+                Swal.fire({ title: 'Error de servidor', text: 'Error del servidor: ' + xhr.responseText, icon: 'error', confirmButtonText: 'ACEPTAR', customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' }, buttonsStyling: false });
             }
         });
     });
@@ -664,15 +727,24 @@ $(document).ready(function() {
         const invSelected = $('#lista-invitados-sin-asignar .guest-item.selected');
         const mesaSel = $('.mesa-card.selected');
 
-        if(invSelected.length === 0) return alert("Selecciona un invitado lateral.");
-        if(mesaSel.length === 0) return alert("Selecciona una mesa en el plano.");
+        if(invSelected.length === 0) {
+            Swal.fire({ title: 'Atención', text: 'Selecciona un invitado de la lista lateral.', icon: 'info', confirmButtonText: 'ENTENDIDO', customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' }, buttonsStyling: false });
+            return;
+        }
+        if(mesaSel.length === 0) {
+            Swal.fire({ title: 'Atención', text: 'Selecciona una mesa en el plano.', icon: 'info', confirmButtonText: 'ENTENDIDO', customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' }, buttonsStyling: false });
+            return;
+        }
 
         const idInvitado = invSelected.data('id');
         const idMesa = mesaSel.data('id-mesa'); 
 
         const max = parseInt(mesaSel.data('capacidad'));
         const actuales = mesaSel.find('.guest-item').length;
-        if(actuales >= max) return alert("Mesa llena.");
+        if(actuales >= max) {
+            Swal.fire({ title: 'Mesa llena', text: 'Esta mesa ya alcanzó su capacidad máxima.', icon: 'warning', confirmButtonText: 'ENTENDIDO', customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' }, buttonsStyling: false });
+            return;
+        }
 
         $.ajax({
             url: 'php/actualizar_mesa_invitado.php',
@@ -687,7 +759,7 @@ $(document).ready(function() {
                     $(`tr[data-id="${idInvitado}"] .td-mesa`).text('Mesa ' + idMesa);
                     actualizarAnalitica();
                 } else {
-                    alert("Error al asignar: " + response.message);
+                    Swal.fire({ title: 'Error', text: 'Error al asignar: ' + response.message, icon: 'error', confirmButtonText: 'ACEPTAR', customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' }, buttonsStyling: false });
                 }
             }
         });
@@ -695,7 +767,10 @@ $(document).ready(function() {
 
     $('#btn-quitar-invitado').off('click').on('click', function() {
         const invEnMesa = $('.mesa-card .guest-item.selected');
-        if(invEnMesa.length === 0) return alert("Selecciona un invitado dentro de una mesa.");
+        if(invEnMesa.length === 0) {
+            Swal.fire({ title: 'Atención', text: 'Selecciona un invitado dentro de una mesa.', icon: 'info', confirmButtonText: 'ENTENDIDO', customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' }, buttonsStyling: false });
+            return;
+        }
 
         const idInvitado = invEnMesa.data('id');
         const mesaOrigen = invEnMesa.closest('.mesa-card');
@@ -713,7 +788,7 @@ $(document).ready(function() {
                     $(`tr[data-id="${idInvitado}"] .td-mesa`).text('S/A');
                     actualizarAnalitica();
                 } else {
-                    alert("Error al quitar asignación: " + response.message);
+                    Swal.fire({ title: 'Error', text: 'Error al quitar asignación: ' + response.message, icon: 'error', confirmButtonText: 'ACEPTAR', customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' }, buttonsStyling: false });
                 }
             }
         });
@@ -776,7 +851,7 @@ $('#btn-eliminar-mesa-seleccionada').off('click').on('click', function() {
         const originalText = btn.html();
 
         if (typeof html2canvas === 'undefined') {
-            alert("Error: La librería html2canvas no cargó. Verifica que pusiste el <script> en tu gestion.html.");
+            Swal.fire({ title: 'Error', text: 'La librería html2canvas no cargó. Verifica que pusiste el <script> en tu gestion.html.', icon: 'error', confirmButtonText: 'ACEPTAR', customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' }, buttonsStyling: false });
             return;
         }
         
@@ -803,7 +878,7 @@ $('#btn-eliminar-mesa-seleccionada').off('click').on('click', function() {
             $('#workspace-mesas').css('transform', `scale(${zoomAnterior})`);
             
         }).catch(err => {
-            alert("Hubo un problema al generar la imagen. Presiona F12 para ver la consola.");
+            Swal.fire({ title: 'Error al exportar', text: 'Hubo un problema al generar la imagen. Presiona F12 para ver la consola.', icon: 'error', confirmButtonText: 'ACEPTAR', customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' }, buttonsStyling: false });
             console.error("Error de html2canvas:", err);
             
             btn.html(originalText);
@@ -870,7 +945,7 @@ $(document).on('click', '.btn-eliminar-invitado', function() {
         const id_mesa = $('#inv-mesa').val(); 
 
         if(nombre === "") {
-            alert("El nombre del invitado no puede estar vacío.");
+            Swal.fire({ title: 'Campo requerido', text: 'El nombre del invitado no puede estar vacío.', icon: 'warning', confirmButtonText: 'ENTENDIDO', customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' }, buttonsStyling: false });
             return;
         }
 
@@ -920,11 +995,11 @@ $(document).on('click', '.btn-eliminar-invitado', function() {
                     
                     cargarInvitados(); 
                 } else {
-                    alert("Error al guardar: " + response.message);
+                    Swal.fire({ title: 'Error', text: 'Error al guardar: ' + response.message, icon: 'error', confirmButtonText: 'ACEPTAR', customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' }, buttonsStyling: false });
                 }
             },
             error: function(xhr) {
-                alert("Error crítico del servidor: " + xhr.responseText);
+                Swal.fire({ title: 'Error crítico', text: 'Error crítico del servidor: ' + xhr.responseText, icon: 'error', confirmButtonText: 'ACEPTAR', customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' }, buttonsStyling: false });
             }
         });
     });
@@ -962,7 +1037,8 @@ $(document).on('click', '.btn-eliminar-invitado', function() {
         const mensaje = $('#inv-mensaje-form').val().trim();
 
         if (!titulo || !mensaje) {
-            return alert("Por favor completa ambos campos para la invitación.");
+            Swal.fire({ title: 'Campos incompletos', text: 'Por favor completa ambos campos para la invitación.', icon: 'warning', confirmButtonText: 'ENTENDIDO', customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' }, buttonsStyling: false });
+            return;
         }
 
         const btn = $(this);
@@ -977,9 +1053,16 @@ $(document).on('click', '.btn-eliminar-invitado', function() {
             dataType: 'json',
             success: function(response) {
                 if(response.status === 'success') {
-                    alert('¡Diseño actualizado exitosamente!');
+                    Swal.fire({
+                        title: '¡Actualizado!',
+                        text: '¡Diseño actualizado exitosamente!',
+                        icon: 'success',
+                        confirmButtonText: 'ACEPTAR',
+                        customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' },
+                        buttonsStyling: false
+                    });
                 } else {
-                    alert("Error: " + response.message);
+                    Swal.fire({ title: 'Error', text: 'Error: ' + response.message, icon: 'error', confirmButtonText: 'ACEPTAR', customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' }, buttonsStyling: false });
                 }
             },
             complete: function() {
@@ -1098,7 +1181,14 @@ $(document).on('click', '.btn-eliminar-invitado', function() {
                 dataType: 'json',
                 success: function(response) {
                     if (response.status === 'success') {
-                        alert('¡Confirmación enviada! Tus datos han sido registrados exitosamente.');
+                        Swal.fire({
+                            title: '¡Confirmación enviada!',
+                            text: 'Tus datos han sido registrados exitosamente.',
+                            icon: 'success',
+                            confirmButtonText: 'ACEPTAR',
+                            customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' },
+                            buttonsStyling: false
+                        });
                         
                         // Limpiar y regresar
                         $('#registro-invitados')[0].reset();
@@ -1107,7 +1197,7 @@ $(document).on('click', '.btn-eliminar-invitado', function() {
                         $('#vista-formulario').addClass('hidden');
                         $('#vista-invitacion').removeClass('hidden');
                     } else {
-                        alert("Hubo un error: " + response.message);
+                        Swal.fire({ title: 'Error', text: 'Hubo un error: ' + response.message, icon: 'error', confirmButtonText: 'ACEPTAR', customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' }, buttonsStyling: false });
                     }
                 },
                 complete: function() {
@@ -1169,4 +1259,3 @@ $(document).on('click', '.btn-eliminar-invitado', function() {
         });
     });
 });
-
