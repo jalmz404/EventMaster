@@ -9,13 +9,15 @@ if (!$id_evento) {
 }
 
 try {
-    //Traer datos del evento
-    $qEvento = "SELECT nombre, lugar, fecha, hora, titulo_invitacion, mensaje_invitacion FROM eventos WHERE id_evento = :id_evento";
+    $qEvento = "SELECT e.nombre, e.lugar, e.fecha, e.hora, e.titulo_invitacion, e.mensaje_invitacion, v.nombre_vestimenta 
+                FROM eventos e
+                LEFT JOIN tipos_vestimenta v ON e.id_tipo_vestimenta = v.id_tipo_vestimenta
+                WHERE e.id_evento = :id_evento";
     $stmtE = $conexion->prepare($qEvento);
     $stmtE->execute([':id_evento' => $id_evento]);
     $evento = $stmtE->fetch(PDO::FETCH_ASSOC);
 
-    //Traer los menus disponibles
+    // Traer los menus disponibles
     $qMenus = "SELECT id_menu, nombre_platillo FROM menus WHERE id_evento = :id_evento";
     $stmtM = $conexion->prepare($qMenus);
     $stmtM->execute([':id_evento' => $id_evento]);

@@ -262,3 +262,80 @@ body {
 .alerta-rosa-btn-cancelar:hover {
     background-color: #e2e8f0 !important;
 }
+
+/* --- PANTALLAS DE LOGIN Y REGISTRO --- */
+.auth-bg {
+    background-color: var(--bg-light); 
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+}
+
+.auth-card {
+    background: var(--bg-card);
+    padding: 2rem 2.5rem;
+    border-radius: 16px; 
+    box-shadow: 0 10px 30px rgba(236, 72, 153, 0.1); 
+    width: 100%;
+    max-width: 400px; 
+    text-align: center;
+    border: 1px solid var(--border-color);
+}
+
+.pink-dot {
+    width: 25px;
+    height: 25px;
+    background-color: var(--primary); 
+    border-radius: 50%;
+    margin: 0 auto 1.5rem auto; 
+}
+
+.auth-card h3 {
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 2.5rem; 
+}
+
+.auth-card .form-group {
+    text-align: left; 
+    margin-bottom: 1.5rem;
+}
+
+.auth-card label {
+    color: var(--text-muted); 
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.auth-card input.form-control {
+    background-color: #f8fafc; 
+    border: 1px solid var(--border-color); 
+    border-radius: 8px; 
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    color: var(--text-main);
+    transition: all 0.2s;
+}
+
+.auth-card input.form-control:focus {
+    background-color: white; 
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.2); 
+    outline: none;
+}
+
+.footer-link {
+    color: var(--primary); 
+    text-decoration: underline;
+    font-size: 0.9rem;
+    display: block;
+    margin-top: 1.5rem;
+    transition: color 0.2s;
+}
+
+.footer-link:hover {
+    color: var(--primary-hover); 
+}

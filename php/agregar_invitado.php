@@ -9,8 +9,9 @@ $id_menu = (!empty($_POST['id_menu'])) ? $_POST['id_menu'] : null;
 // Recibimos la mesa. Si viene vacía o dice "S/A", la guardamos como null
 $id_mesa = (!empty($_POST['id_mesa']) && $_POST['id_mesa'] !== 'S/A') ? $_POST['id_mesa'] : null;
 
-if (!$id_evento || !$nombre_completo) {
-    echo json_encode(["status" => "error", "message" => "El nombre es obligatorio"]); exit;
+if (!$id_evento || !$nombre_completo || !$id_menu) {
+    echo json_encode(["status" => "error", "message" => "El nombre y el platillo son obligatorios"]); 
+    exit;
 }
 
 try {

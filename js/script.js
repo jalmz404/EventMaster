@@ -5,6 +5,7 @@ let selectActual = null;
 let filaEditando = null;
 let zoomLevel = 1.0;
 let menuChartInstance = null;
+let invitadoEditandoId = null;
 
 // ==========================================
 // FUNCIONES GLOBALES REUTILIZABLES (Backend)
@@ -170,7 +171,7 @@ function cargarInvitados() {
 
                 response.data.forEach(invitado => {
                     const menuText = invitado.nombre_platillo ? invitado.nombre_platillo : '<span class="text-muted">Por definir</span>';
-                    const numMesaText = invitado.id_mesa ? `Mesa ${invitado.id_mesa}` : 'S/A';
+                    let numMesaText = invitado.nombre_mesa ? invitado.nombre_mesa : 'S/A';
                     
                     // si es acompañante, mostramos de quién es, si no es principal.
                     let tipoBadge = '';
@@ -266,6 +267,7 @@ function abrirModalInvitado(modo, btn = null) {
     });
 
     if(modo === 'nuevo') {
+        invitadoEditandoId = null;
         $('#tituloModalInvitado').text("Agregar Invitado");
         $('#inv-nombre').val('');
         $('#inv-menu').val('');
@@ -557,6 +559,7 @@ $(document).ready(function() {
                             </div>`;
                         $('#menu-cards-container').append(cardHtml);
                         $('#input-new-menu').val(''); 
+                        $('#inv-menu').append(new Option(response.nombre, response.id_menu));
                     } else {
                         Swal.fire({ title: 'Error', text: 'Error: ' + response.message, icon: 'error', confirmButtonText: 'ACEPTAR', customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' }, buttonsStyling: false });
                     }
@@ -600,6 +603,7 @@ $(document).ready(function() {
         }
     });
 });
+
     $('#btn-guardar-cambios').off('click').on('click', function() {
         const id_evento = new URLSearchParams(window.location.search).get('id_evento');
         const data = {
@@ -672,6 +676,21 @@ $(document).ready(function() {
                 });
             }
         });
+    });
+
+    // ABRIR MODAL PARA EDITAR INVITADO
+    $(document).on('click', '.btn-editar-invitado', function() {
+        invitadoEditandoId = $(this).data('id');
+        const nombreActual = $(this).data('nombre');
+        const menuActual = $(this).data('menu');
+
+        $('#tituloModalInvitado').text("Editar Invitado");
+        $('#inv-nombre').val(nombreActual);
+        $('#inv-menu').val(menuActual);
+        
+        $('#inv-mesa').closest('.col-md-12').hide(); 
+
+        new bootstrap.Modal('#modalInvitado').show();
     });
 
     // Acomodo de Mesas y Zoom
@@ -756,7 +775,8 @@ $(document).ready(function() {
                     mesaSel.find('.empty-text').hide();
                     invSelected.removeClass('selected').appendTo(mesaSel.find('.mesa-body'));
                     mesaSel.find('.count').text(mesaSel.find('.guest-item').length);
-                    $(`tr[data-id="${idInvitado}"] .td-mesa`).text('Mesa ' + idMesa);
+                    const textoMesa = mesaSel.find('.mesa-header').text();
+                    $(`tr[data-id="${idInvitado}"] .td-mesa`).text(textoMesa);
                     actualizarAnalitica();
                 } else {
                     Swal.fire({ title: 'Error', text: 'Error al asignar: ' + response.message, icon: 'error', confirmButtonText: 'ACEPTAR', customClass: { popup: 'alerta-rosa-popup', title: 'alerta-rosa-titulo', htmlContainer: 'alerta-rosa-texto', icon: 'alerta-rosa-icono', confirmButton: 'alerta-rosa-btn-confirmar' }, buttonsStyling: false });
@@ -794,7 +814,7 @@ $(document).ready(function() {
         });
     });
 
-$('#btn-eliminar-mesa-seleccionada').off('click').on('click', function() {
+    $('#btn-eliminar-mesa-seleccionada').off('click').on('click', function() {
         const mesaSel = $('.mesa-card.selected');
         if(mesaSel.length === 0) {
             Swal.fire({ title: 'Atención', text: 'Selecciona una mesa en el plano para poder eliminarla.', icon: 'info' });
@@ -891,7 +911,7 @@ $('#btn-eliminar-mesa-seleccionada').off('click').on('click', function() {
         actualizarAnalitica();
     });
 
-$(document).on('click', '.btn-eliminar-invitado', function() {
+    $(document).on('click', '.btn-eliminar-invitado', function() {
         const idInvitado = $(this).data('id');
         
         Swal.fire({
@@ -1095,6 +1115,7 @@ $(document).on('click', '.btn-eliminar-invitado', function() {
                         $('#inv-display-fecha').text(ev.fecha);
                         $('#inv-display-hora').text(ev.hora);
                         $('#inv-display-lugar').text(ev.lugar);
+                        $('#inv-display-vestimenta').text(ev.nombre_vestimenta || 'Por definir');
 
                         // Generar platillos
                         response.menus.forEach(m => {
@@ -1257,5 +1278,60 @@ $(document).on('click', '.btn-eliminar-invitado', function() {
                 btn.removeClass('btn-success border-success').addClass('btn-primary-custom');
             }, 2000);
         });
+    });
+});
+
+// ==========================================
+// REGISTRO DE NUEVOS ORGANIZADORES
+// ==========================================
+$('#form-registro-organizador').on('submit', function(e) {
+    e.preventDefault(); 
+
+    const correo = $('#reg-correo').val();
+    const password = $('#reg-password').val();
+
+    $.ajax({
+        url: 'php/registrar_organizador.php', 
+        method: 'POST',
+        data: { correo: correo, password: password }, 
+        dataType: 'json',
+        success: function(response) {
+            if(response.status === 'success') {
+                Swal.fire({
+                    title: '¡REGISTRO EXITOSO!',
+                    text: 'Tu cuenta ha sido creada. Ahora puedes iniciar sesión.',
+                    icon: 'success',
+                    customClass: {
+                        popup: 'alerta-rosa-popup',
+                        title: 'alerta-rosa-titulo',
+                        htmlContainer: 'alerta-rosa-texto',
+                        confirmButton: 'alerta-rosa-btn-confirmar'
+                    },
+                    buttonsStyling: false
+                }).then(() => {
+                    window.location.href = 'login.html';
+                });
+            } else {
+                Swal.fire({
+                    title: 'Atención',
+                    text: response.message,
+                    icon: 'warning',
+                    customClass: {
+                        popup: 'alerta-rosa-popup',
+                        title: 'alerta-rosa-titulo',
+                        htmlContainer: 'alerta-rosa-texto',
+                        confirmButton: 'alerta-rosa-btn-confirmar'
+                    },
+                    buttonsStyling: false
+                });
+            }
+        },
+        error: function() {
+            Swal.fire({ 
+                title: 'Error de conexión', 
+                text: 'No se pudo conectar con el servidor. Revisa tu consola.', 
+                icon: 'error' 
+            });
+        }
     });
 });

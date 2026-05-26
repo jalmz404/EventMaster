@@ -15,8 +15,9 @@ if (!$id_evento) {
 }
 
 try {
-    $id_organizador = $_SESSION['id_organizador'];
-    
+
+    $id_organizador = $_SESSION['id_organizador'] ?? null;
+
     //Extraer los datos del evento
     $queryEvento = "SELECT * FROM eventos WHERE id_evento = :id_evento AND id_organizador = :id_organizador";
     $stmt = $conexion->prepare($queryEvento);
@@ -28,9 +29,15 @@ try {
         exit;
     }
 
-    //Extraer los catálogos
-    $tipos = $conexion->query("SELECT id_tipo_evento, nombre_tipo FROM tipos_evento")->fetchAll(PDO::FETCH_ASSOC);
-    $vestimentas = $conexion->query("SELECT id_tipo_vestimenta, nombre_vestimenta FROM tipos_vestimenta")->fetchAll(PDO::FETCH_ASSOC);
+    $queryTipos = "SELECT id_tipo_evento, nombre_tipo FROM tipos_evento WHERE id_organizador = :id_organizador";
+    $stmtT = $conexion->prepare($queryTipos);
+    $stmtT->execute([':id_organizador' => $id_organizador]);
+    $tipos = $stmtT->fetchAll(PDO::FETCH_ASSOC);
+
+    $queryVestimentas = "SELECT id_tipo_vestimenta, nombre_vestimenta FROM tipos_vestimenta WHERE id_organizador = :id_organizador";
+    $stmtV = $conexion->prepare($queryVestimentas);
+    $stmtV->execute([':id_organizador' => $id_organizador]);
+    $vestimentas = $stmtV->fetchAll(PDO::FETCH_ASSOC);
 
     //Extraer los platillos
     $queryMenus = "SELECT id_menu, nombre_platillo FROM menus WHERE id_evento = :id_evento";

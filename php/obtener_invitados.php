@@ -11,11 +11,14 @@ if (!$id_evento) {
 }
 
 try {
-    // Usamos LEFT JOIN para traer el platillo y el nombre del invitado principal (titular)
-    $query = "SELECT i.*, m.nombre_platillo, p.nombre_completo AS nombre_titular 
+    $query = "SELECT i.*, 
+                     m.nombre_platillo, 
+                     p.nombre_completo AS nombre_titular,
+                     CONCAT('Mesa ', ms.numero_mesa) AS nombre_mesa 
               FROM invitados i 
               LEFT JOIN menus m ON i.id_menu = m.id_menu 
               LEFT JOIN invitados p ON i.id_invitado_principal = p.id_invitado 
+              LEFT JOIN mesas ms ON i.id_mesa = ms.id_mesa
               WHERE i.id_evento = :id_evento 
               ORDER BY i.id_invitado ASC";
               
